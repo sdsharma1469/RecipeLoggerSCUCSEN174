@@ -1,23 +1,37 @@
 'use client'
 
 import { useState } from 'react'
+import { generateRecipe } from './generateRecipe'
 
 export default function UploadRecipePage() {
   const [name, setName] = useState('')
   const [ingredients, setIngredients] = useState('')
   const [steps, setSteps] = useState('')
   const [status, setStatus] = useState('')
+  const [rating, setRating] = useState(0)
+  const [halal, setHalal] = useState(false)
+  const [vegan, setVegan] = useState(false)
+  const [vegetarian, setVegetarian] = useState(false)
+  const [lactoseFree, setLactoseFree] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const recipe = generateRecipe({
+      name,
+      ingredients,
+      steps,
+      halal,
+      vegan,
+      vegetarian,
+      lactoseFree,
+      rating,
+    })
+
     const res = await fetch('/api/recipes/upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        ingredients: ingredients.split(',').map((s) => s.trim()),
-        steps: steps.split('\n').map((s) => s.trim()),
-      }),
+      body: JSON.stringify(recipe),
     })
 
     const data = await res.json()
@@ -26,6 +40,11 @@ export default function UploadRecipePage() {
       setName('')
       setIngredients('')
       setSteps('')
+      setRating(0)
+      setHalal(false)
+      setVegan(false)
+      setVegetarian(false)
+      setLactoseFree(false)
     } else {
       setStatus('❌ Failed to upload recipe.')
     }
@@ -53,6 +72,30 @@ export default function UploadRecipePage() {
           value={steps}
           onChange={(e) => setSteps(e.target.value)}
           required
+        />
+        <label>
+          <input type="checkbox" checked={halal} onChange={() => setHalal(!halal)} />
+          Halal
+        </label>
+        <label>
+          <input type="checkbox" checked={vegan} onChange={() => setVegan(!vegan)} />
+          Vegan
+        </label>
+        <label>
+          <input type="checkbox" checked={vegetarian} onChange={() => setVegetarian(!vegetarian)} />
+          Vegetarian
+        </label>
+        <label>
+          <input type="checkbox" checked={lactoseFree} onChange={() => setLactoseFree(!lactoseFree)} />
+          Lactose Free
+        </label>
+        <input
+          type="number"
+          placeholder="Rating (e.g. 5)"
+          value={rating}
+          onChange={(e) => setRating(parseInt(e.target.value, 10))}
+          min="0"
+          max="5"
         />
         <button type="submit">Upload</button>
       </form>
