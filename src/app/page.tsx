@@ -14,7 +14,7 @@ export default function Home() {
     }}>
       <h1>🍳 Welcome to SCU Recipes!</h1>
       <p style={{ marginBottom: '2rem' }}>Share your favorite dish with the world.</p>
-      <Link href="/upload">
+      <Link href="/pages/upload">
         <button style={{
           padding: '0.75rem 1.5rem',
           fontSize: '1rem',

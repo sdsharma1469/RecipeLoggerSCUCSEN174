@@ -1,4 +1,4 @@
-// app/api/recipes/all/route.ts
+// app/api/recipes/allRecipes/route.ts
 import { db } from '@/lib/firebase-admin'
 import { NextResponse } from 'next/server'
 

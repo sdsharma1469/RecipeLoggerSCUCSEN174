@@ -22,7 +22,7 @@ export default function RecipeListPage() {
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const res = await fetch('/api/recipes/all')
+        const res = await fetch('/api/allRecipes')
         if(res) {console.log("result")}
         const data = await res.json()
         console.log(data)
