@@ -41,7 +41,30 @@ export default function RecipeListPage() {
 
   return (
     <div style={{ padding: '2rem' }}>
+      <head>
+          <title>Explore Page</title>
+          <style>
+
+          </style>
+
+          <ul id="nav">
+              <li className="navLi"><a className="navA" href="index.html">Test 1</a></li>
+			        <li className="navLi"><a className="navA" href="page2.html">Test 2</a></li>
+			        <li className="navLi"><a className="navA" href="page3.html">Test 3</a></li>
+			        <li className="navLi"><a className="navA" href="page4.html">Test 4</a></li>
+		      </ul>
+      </head>
+      
       <h1>All Recipes</h1>
+      
+      <body>
+        <ul id="nav">
+              <li className="navLi"><a className="navA" href="index.html">Test 1</a></li>
+			        <li className="navLi"><a className="navA" href="page2.html">Test 2</a></li>
+			        <li className="navLi"><a className="navA" href="page3.html">Test 3</a></li>
+			        <li className="navLi"><a className="navA" href="page4.html">Test 4</a></li>
+		      </ul>
+      </body>
       <div
         style={{
           display: 'grid',
