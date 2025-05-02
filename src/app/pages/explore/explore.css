@@ -27,12 +27,25 @@ li.navLi a:hover{
     background-color:green;
 }
 
-#mainContent{
+.container{
     display:flex;
-    flex-direction:row;
-    gap:2rem;
-    padding: 2rem;
+    padding: 2em;
 }
+
+.main-content{
+    width:70%;
+    padding-right:2em;
+}
+
+.filtersSidebar{
+    width:30%;
+    background-color:#f7f7d9;
+    padding:1em;
+    border-left: 2px solid #ccc;
+    border-radius:1em;
+}
+
+.f
 
 #recipeItems{
     display:flex;
