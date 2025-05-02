@@ -45,16 +45,29 @@ li.navLi a:hover{
     border-radius:1em;
 }
 
-.f
-
-#recipeItems{
+.recipeTagSearch{
     display:flex;
-    justify-content:left;
-    flex-wrap:wrap;
-    gap:20px;
-    padding: 20px;
-    flex:2;
+    gap:1em;
+    margin-bottom:1em;
 }
+
+.recipeTagSearch input{
+    flex:1;
+    padding: 0.5em;
+    border:1px solid #ccc;
+    border-radius: 5px;
+}
+
+.recipeBlock{
+    display:flex;
+    padding: 1em;
+    background-color:#ffffffcc;
+    border-radius:10px;
+    margin-bottom:2em;
+    flex-direction:column;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 #recipe{
     display:flex;
     flex-direction: row;
