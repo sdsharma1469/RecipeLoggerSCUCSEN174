@@ -16,7 +16,6 @@ export default function UploadRecipePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     const recipe = generateRecipe({
       name,
       ingredients,
