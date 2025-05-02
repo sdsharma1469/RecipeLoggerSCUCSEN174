@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import './explore.css';
 
 interface Recipe {
   recipeId: string
@@ -43,16 +44,16 @@ export default function RecipeListPage() {
     <div style={{ padding: '2rem' }}>
     <head>
         <title>Explore Page</title>
-        <style>
-        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="explore.css" />
     </head>
     
     <h1>All Recipes</h1>
     
     <div id="navbar">
       <ul id="nav">
-          <li className="navLi"><a className="navA" href="index.html">Test 1</a></li>
-          <li className="navLi"><a className="navA" href="page2.html">Test 2</a></li>
+          <li className="navLi"><a className="navA" href="Home.html">Home</a></li>
+          <li className="navLi"><a className="navA" href="page2.html">ShoppingCart</a></li>
           <li className="navLi"><a className="navA" href="page3.html">Test 3</a></li>
           <li className="navLi"><a className="navA" href="page4.html">Test 4</a></li>
       </ul>

@@ -1,0 +1,21 @@
+#recipeItems{
+    display:flex;
+    justify-content:left;
+    flex-wrap:wrap;
+    gap:20px;
+}
+#recipe{
+    display:flex;
+    justify-content:left;
+    flex-wrap:wrap;
+    gap:20px;
+    margin-left:10px;
+}
+#recipe img{
+    object-fit:cover;
+    border-radius:5px;
+}
+
+aside {
+    display:flex;
+}
