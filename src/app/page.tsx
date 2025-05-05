@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { signInWithPopup, User } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { auth, provider, db } from '@/lib/firebase-client'
-import { addUserToFirestore } from '@/utils/UserHandling/addUsers'
+import { addUserToFirestore } from '@/lib/utils/UserHandling/addUsers'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -33,8 +33,8 @@ export default function SignupPage() {
         throw new Error('User document is missing a username.')
       }
 
-      router.push(`/homepage/${username}`)
-      
+      router.push(`/home/${username}`)
+
     } catch (err: any) {
       console.error('❌ Auth error:', err)
       setError(err.message)
