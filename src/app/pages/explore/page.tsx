@@ -1,147 +1,196 @@
-'use client'
+// page.tsx
+"use client";
+import React, { useState } from "react";
+import "./explore.css";
 
-import { useEffect, useState } from 'react'
-import React from "react"
-import './explore.css';
+const ExplorePage: React.FC = () => {
+  const filters = ["Vegetarian", "Quick", "Gluten-Free", "Under $10"];
+  const [filterStates, setFilterStates] = useState<Record<string, string>>({});
 
-interface Recipe {
-  recipeId: string
-  name: string
-  ingredients: string[]
-  steps: string[]
-  halal: boolean
-  vegan: boolean
-  vegetarian: boolean
-  lactoseFree: boolean
-  rating: number
-  comments: string[]
-}
-
-export default function RecipeListPage() {
-  const [recipes, setRecipes] = useState<Recipe[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchRecipes = async () => {
-      try {
-        const res = await fetch('/api/allRecipes')
-        if(res) {console.log("result")}
-        const data = await res.json()
-        console.log(data)
-        setRecipes(data.recipes)
-      } catch (err) {
-        console.error('Failed to fetch recipes:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchRecipes()
-  }, [])
-
-  if (loading) return <p style={{ padding: '2rem' }}>Loading recipes...</p>
+  // toggleFilter 
+  const toggleFilter = (name: string) => {
+    setFilterStates(prev => {
+      const current = prev[name] || "none";
+      const next = current === "none" ? "whitelisted" : current === "whitelisted" ? "blacklisted" : "none";
+      return { ...prev, [name]: next };
+    });
+  };
 
   return (
-    <div style={{ padding: '2rem' }}>
-    <head>
-        <title>Explore Page</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="explore.css" />
-    </head>
-    
-    <div className="navbar">
-      <div>Explore Recipes</div>
-      <div>
-        <a href="#">Login</a>
-        <a href="#">Shopping Cart</a>
-        <a href="#">User</a>
-      </div>
-    </div>
-
-    <div id="container">
-      <div id="mainContent">
-        {/*First main div is gonna be the search by recipe and tags boxes*/}
-        <div className="recipeTagSearch">
-          <input type="text" placeholder="Search recipes..." />
-          <input type="text" placeholder="Filter by tags..." />
+    <div>
+      <div className="navbar">
+        <div>Explore Recipes</div>
+        <div>
+          <a href="#">Home</a> | <a href="#">My Recipes</a> | <a href="#">Profile</a>
         </div>
-
-        {/*This recipe div defines the recipe block. I added three of these for now*/}
-        <div id="recipeBlock">
-          <div className="recipeTitle">Recipe Title</div>
-          <img className="recipeImage" src="https://placeholder" alt="Recipe Image"/>
-          <div className="recipeDescription">
-            <p>This is the description for a recipe</p>
+      </div>
+      <div className="container">
+        <div className="main-content">
+          <div className="search-filter-bar">
+            <input type="text" placeholder="Search recipes..." />
+            <input type="text" placeholder="Filter by tags..." />
           </div>
-          <div className="recipeTags">
-            <span>Vegetarian</span>
-            <span>Intermediate</span>
-            <span>45mins</span>
-          </div>
-          <div className="recipeFooter">
-            <div className="recipeRatings">
-              <div>Creator Rating: ⭐⭐⭐⭐</div>
-              <div>User Rating: ⭐⭐⭐☆☆</div>
-              <div>Difficulty Rating: ⭐⭐</div>
+          <div className="recipe-block">
+            <div className="recipe-header">Recipe Title 1</div>
+            <img
+              src="https://via.placeholder.com/600x200"
+              alt="Recipe 1"
+              className="recipe-image"
+            />
+            <div className="recipe-description">
+            Ad litora torquent per conubia nostra inceptos himenaeos.
             </div>
-            
-            <div className="recipePrice">
-              <p>$23.45</p>
+            <div className="recipe-tags">
+              <span>Vegetarian</span>
+              <span>Easy</span>
+              <span>30 min</span>
             </div>
-            
+            <div className="recipe-footer">
+              <div className="ratings">
+                <div>Creator Rating: ⭐⭐⭐⭐</div>
+                <div>User Rating: ⭐⭐⭐⭐☆</div>
+                <div>Difficulty: ⭐⭐</div>
+              </div>
+              <div className="price">$12.99</div>
+            </div>
+          </div>
+        
+        {/* </div> Closes the main-content section where all recipes are located. Will uncomment this div once dups are removed */}
+
+        {/* The following are just more copies of the recipe block for visualization, these will be deleted later */}
+        <div className="recipe-block">
+            <div className="recipe-header">Recipe Title 2</div>
+            <img
+              src="https://via.placeholder.com/600x200"
+              alt="Recipe 2"
+              className="recipe-image"
+            />
+            <div className="recipe-description">
+            Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+            </div>
+            <div className="recipe-tags">
+              <span>Vegetarian</span>
+              <span>Easy</span>
+              <span>30 min</span>
+            </div>
+            <div className="recipe-footer">
+              <div className="ratings">
+                <div>Creator Rating: ⭐⭐⭐⭐</div>
+                <div>User Rating: ⭐⭐⭐⭐☆</div>
+                <div>Difficulty: ⭐⭐</div>
+              </div>
+              <div className="price">$12.99</div>
+            </div>
+          </div>
+
+          <div className="recipe-block">
+            <div className="recipe-header">Recipe Title 3</div>
+            <img
+              src="https://via.placeholder.com/600x200"
+              alt="Recipe 3"
+              className="recipe-image"
+            />
+            <div className="recipe-description">
+            Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
+            </div>
+            <div className="recipe-tags">
+              <span>Vegetarian</span>
+              <span>Easy</span>
+              <span>30 min</span>
+            </div>
+            <div className="recipe-footer">
+              <div className="ratings">
+                <div>Creator Rating: ⭐⭐⭐⭐</div>
+                <div>User Rating: ⭐⭐⭐⭐☆</div>
+                <div>Difficulty: ⭐⭐</div>
+              </div>
+              <div className="price">$12.99</div>
+            </div>
+          </div>
+        
+        <div className="recipe-block">
+            <div className="recipe-header">Recipe Title 4</div>
+            <img
+              src="https://via.placeholder.com/600x200"
+              alt="Recipe 4"
+              className="recipe-image"
+            />
+            <div className="recipe-description">
+            Lorem ipsum dolor sit amet consectetur adipiscing elit.
+            </div>
+            <div className="recipe-tags">
+              <span>Vegetarian</span>
+              <span>Easy</span>
+              <span>30 min</span>
+            </div>
+            <div className="recipe-footer">
+              <div className="ratings">
+                <div>Creator Rating: ⭐⭐⭐⭐</div>
+                <div>User Rating: ⭐⭐⭐⭐☆</div>
+                <div>Difficulty: ⭐⭐</div>
+              </div>
+              <div className="price">$12.99</div>
+            </div>
           </div>
         </div>
+        {/* End of recipe block duplicates*/}
 
-        {/*Aside is used to add the filter side bar*/}
-        <div id="filtersSidebar">
-          <div className="filterTitle">Filters</div>
-          <input className="filterSearch"type="text" placeholder="Search filters..."/>
-          <div className="filterList">
-            <button>Vegetarian</button>
-            <button>Quick</button>
-            <button>Gluten-Free</button>
-            <button>Over $10</button>
-            <button>Under $10</button>
+        <div className="filters-column">
+          <div className="filter-title">Filters</div>
+          <input type="text" placeholder="Search filters..." style={{ width: "100%", padding: "0.5em", marginBottom: "1em" }}/>
+          <div className="filter-list">
+            {/* Following is utilized to make the filters toggleable for whitelists and blacklists. Calls toggleFilter() function on click */}
+            {filters.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => toggleFilter(filter)}
+                className={filterStates[filter] || ""}
+              >
+                {filter}
+              </button>
+            ))}
           </div>
         </div>
-
       </div>
-    </div>
 
-    <div style={{ padding: '2rem' }}>
-      <h1>All Recipes</h1>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-          gap: '1.5rem',
-          marginTop: '1.5rem',
-        }}
-      >
-        {recipes.map((recipe) => (
-          <div
-            key={recipe.recipeId}
-            style={{
-              border: '1px solid #ddd',
-              borderRadius: '10px',
-              padding: '1rem',
-              background: '#fafafa',
-            }}
-          >
-            <h2>{recipe.name}</h2>
-            <p><strong>Rating:</strong> {recipe.rating}/5</p>
-            <p><strong>Tags:</strong> {[
-              recipe.halal && 'Halal',
-              recipe.vegan && 'Vegan',
-              recipe.vegetarian && 'Vegetarian',
-              recipe.lactoseFree && 'Lactose-Free'
-            ].filter(Boolean).join(', ') || 'None'}</p>
-            <p><strong>Ingredients:</strong></p>
-            <ul>{recipe.ingredients.map((ing, i) => <li key={i}>{ing}</li>)}</ul>
-          </div>
-        ))}
-      </div>
+      {/**
+       * <div style={{ padding: '2rem' }}>
+       *   <h1>All Recipes</h1>
+       *   <div
+       *     style={{
+       *       display: 'grid',
+       *       gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+       *       gap: '1.5rem',
+       *       marginTop: '1.5rem',
+       *     }}
+       *   >
+       *     {recipes.map((recipe) => (
+       *       <div
+       *         key={recipe.recipeId}
+       *         style={{
+       *           border: '1px solid #ddd',
+       *           borderRadius: '10px',
+       *           padding: '1rem',
+       *           background: '#fafafa',
+       *         }}
+       *       >
+       *         <h2>{recipe.name}</h2>
+       *         <p><strong>Rating:</strong> {recipe.rating}/5</p>
+       *         <p><strong>Tags:</strong> {[
+       *           recipe.halal && 'Halal',
+       *           recipe.vegan && 'Vegan',
+       *           recipe.vegetarian && 'Vegetarian',
+       *           recipe.lactoseFree && 'Lactose-Free'
+       *         ].filter(Boolean).join(', ') || 'None'}</p>
+       *         <p><strong>Ingredients:</strong></p>
+       *         <ul>{recipe.ingredients.map((ing, i) => <li key={i}>{ing}</li>)}</ul>
+       *       </div>
+       *     ))}
+       *   </div>
+       * </div>
+       */}
     </div>
-    </div>
-  )
-}
+  );
+};
+
+export default ExplorePage;
