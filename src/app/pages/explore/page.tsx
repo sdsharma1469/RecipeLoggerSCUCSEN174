@@ -15,7 +15,7 @@ const ExplorePage: React.FC = () => {
       return { ...prev, [name]: next };
     });
   };
-
+  
   return (
     <div>
       <div className="navbar">
@@ -27,8 +27,7 @@ const ExplorePage: React.FC = () => {
       <div className="container">
         <div className="main-content">
           <div className="search-filter-bar">
-            <input type="text" placeholder="Search recipes..." />
-            <input type="text" placeholder="Filter by tags..." />
+            <input type="text" placeholder="Search by recipe name or tag..." />
           </div>
           <div className="recipe-block">
             <div className="recipe-header">Recipe Title 1</div>
