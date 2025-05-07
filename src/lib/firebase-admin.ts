@@ -12,7 +12,7 @@ const serviceAccount: ServiceAccount = {
   privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') || ''
 }
 
-const app = getApps().length ? getApp() : initializeApp({ credential: cert(serviceAccount) })
-const db = getFirestore(app)
+const adminApp = getApps().length ? getApp() : initializeApp({ credential: cert(serviceAccount) })
+const db = getFirestore(adminApp)
 
-export { db, app }
+export { db, adminApp }

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { generateRecipe } from '../../utils/generateRecipe'
+import { generateRecipe } from '../../lib/utils/Recipes/generateRecipe'
 
 export default function UploadRecipePage() {
   const [name, setName] = useState('')
