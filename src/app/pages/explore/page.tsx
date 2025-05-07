@@ -1,20 +1,56 @@
 // page.tsx
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./explore.css";
 
-const ExplorePage: React.FC = () => {
-  const filters = ["Vegetarian", "Quick", "Gluten-Free", "Under $10"];
-  const [filterStates, setFilterStates] = useState<Record<string, string>>({});
+const filters = ["Vegetarian", "Quick", "Gluten-Free", "Easy"];
 
-  // toggleFilter 
+type FilterState = "none" | "whitelisted" | "blacklisted";
+
+type TagMode = Record<string, FilterState>;
+
+const ExplorePage: React.FC = () => {
+  const [filterStates, setFilterStates] = useState<TagMode>({});
+
   const toggleFilter = (name: string) => {
-    setFilterStates(prev => {
+    setFilterStates((prev) => {
       const current = prev[name] || "none";
-      const next = current === "none" ? "whitelisted" : current === "whitelisted" ? "blacklisted" : "none";
+      const next =
+        current === "none"
+          ? "whitelisted"
+          : current === "whitelisted"
+          ? "blacklisted"
+          : "none";
       return { ...prev, [name]: next };
     });
   };
+
+  useEffect(() => {
+    const recipeBlocks = document.querySelectorAll<HTMLElement>(".recipe-block");
+
+    recipeBlocks.forEach((block) => {
+      const tagElements = block.querySelectorAll<HTMLElement>(".recipe-tags a");
+      const tags = Array.from(tagElements).map((el) => el.textContent?.trim().toLowerCase() || "");
+
+      const whitelistTags = Object.keys(filterStates).filter(
+        (tag) => filterStates[tag] === "whitelisted"
+      );
+      const blacklistTags = Object.keys(filterStates).filter(
+        (tag) => filterStates[tag] === "blacklisted"
+      );
+
+      const hasWhitelistMatch =
+        whitelistTags.length === 0 ||
+        whitelistTags.some((tag) => tags.includes(tag.toLowerCase()));
+      const hasBlacklistMatch = blacklistTags.some((tag) => tags.includes(tag.toLowerCase()));
+
+      if (hasWhitelistMatch && !hasBlacklistMatch) {
+        block.style.display = "block";
+      } else {
+        block.style.display = "none";
+      }
+    });
+  }, [filterStates]);
   
   return (
     <div>
@@ -40,9 +76,9 @@ const ExplorePage: React.FC = () => {
             Ad litora torquent per conubia nostra inceptos himenaeos.
             </div>
             <div className="recipe-tags">
-              <span>Vegetarian</span>
-              <span>Easy</span>
-              <span>30 min</span>
+              <a className="tagSpan" href="http://localhost:3000/pages/explore?tag=Vegetarian">Vegetarian</a>
+              <a className="tagSpan" href="http://localhost:3000/pages/explore?tag=Hard">Hard</a>
+              <a className="tagSpan" href="http://localhost:3000/pages/explore?tag=30 min">30 min</a>
             </div>
             <div className="recipe-footer">
               <div className="ratings">
@@ -68,9 +104,9 @@ const ExplorePage: React.FC = () => {
             Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
             </div>
             <div className="recipe-tags">
-              <span>Vegetarian</span>
-              <span>Easy</span>
-              <span>30 min</span>
+              <a>Vegetarian</a>
+              <a>Easy</a>
+              <a>30 min</a>
             </div>
             <div className="recipe-footer">
               <div className="ratings">
@@ -93,9 +129,9 @@ const ExplorePage: React.FC = () => {
             Lorem ipsum dolor sit amet consectetur adipiscing elit. Quisque faucibus ex sapien vitae pellentesque sem placerat. In id cursus mi pretium tellus duis convallis. Tempus leo eu aenean sed diam urna tempor. Pulvinar vivamus fringilla lacus nec metus bibendum egestas. Iaculis massa nisl malesuada lacinia integer nunc posuere. Ut hendrerit semper vel class aptent taciti sociosqu. Ad litora torquent per conubia nostra inceptos himenaeos.
             </div>
             <div className="recipe-tags">
-              <span>Vegetarian</span>
-              <span>Easy</span>
-              <span>30 min</span>
+              <a>Vegetarian</a>
+              <a>Easy</a>
+              <a>30 min</a>
             </div>
             <div className="recipe-footer">
               <div className="ratings">
@@ -118,9 +154,9 @@ const ExplorePage: React.FC = () => {
             Lorem ipsum dolor sit amet consectetur adipiscing elit.
             </div>
             <div className="recipe-tags">
-              <span>Vegetarian</span>
-              <span>Easy</span>
-              <span>30 min</span>
+              <a>Vegetarian</a>
+              <a>Easy</a>
+              <a>30 min</a>
             </div>
             <div className="recipe-footer">
               <div className="ratings">
