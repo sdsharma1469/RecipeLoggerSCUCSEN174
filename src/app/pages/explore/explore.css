@@ -1,0 +1,129 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom right, #e6f4e6, #fffde6);
+    color: #333;
+  }
+  
+  .navbar {
+    background-color: #cce5cc;
+    padding: 1em 2em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .container {
+    display: flex;
+    padding: 2em;
+  }
+  
+  .main-content {
+    width: 70%;
+    padding-right: 2em;
+  }
+  
+  .filters-column {
+    width: 30%;
+    background-color: #f7f7d9;
+    padding: 1em;
+    border-left: 2px solid #ccc;
+    border-radius: 1em;
+  }
+  
+  .search-filter-bar {
+    display: flex;
+    gap: 1em;
+    margin-bottom: 1em;
+  }
+  
+  .search-filter-bar input {
+    flex: 1;
+    padding: 0.5em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .recipe-block {
+    background-color: #ffffffcc;
+    border-radius: 10px;
+    margin-bottom: 2em;
+    padding: 1em;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .recipe-header {
+    font-size: 1.5em;
+    margin-bottom: 0.5em;
+  }
+  
+  .recipe-image {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 1em;
+  }
+  
+  .recipe-description {
+    margin-bottom: 0.5em;
+  }
+  
+  .recipe-tags {
+    margin-bottom: 0.5em;
+  }
+  
+  .recipe-tags span {
+    background-color: #d2f4d2;
+    padding: 0.2em 0.5em;
+    margin-right: 0.3em;
+    border-radius: 5px;
+    font-size: 0.85em;
+  }
+  
+  .ratings {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    font-size: 0.9em;
+  }
+  
+  .recipe-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  
+  .price {
+    font-weight: bold;
+    font-size: 1.1em;
+  }
+  
+  .filter-title {
+    font-size: 1.2em;
+    margin-bottom: 0.5em;
+  }
+  
+  .filter-list button {
+    display: block;
+    width: 100%;
+    padding: 0.5em;
+    margin: 0.2em 0;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #eee;
+    transition: background-color 0.3s;
+  }
+  
+  .filter-list button.whitelisted {
+    background-color: #cce5cc;
+  }
+  
+  .filter-list button.blacklisted {
+    background-color: #f8d7da;
+  }
