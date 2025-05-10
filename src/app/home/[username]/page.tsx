@@ -1,95 +1,179 @@
-import { getUserProfileByUsername } from '@/lib/utils/UserHandling/getUserByUsername'
-import { notFound } from 'next/navigation'
-import Image from 'next/image'
-import RecipeCard from '@/app/components/UserPage/recipeCard'
-import Navbar from '@/app/components/navbar'
-import { RecipeList } from '@/types/RecipeList'
+"use client";
+import React, { useState, useEffect } from "react";
+import "./home.css";
 
-interface Props {
-  params: { username: string }
-}
+// Mock data arrays
+const savedRecipes = [
+  "Spaghetti Carbonara",
+  "Chicken Tikka Masala",
+  "Pad Thai",
+  "Sushi Rolls",
+  "Vegetable Stir Fry",
+  "Grilled Salmon",
+  "Caesar Salad",
+  "Beef Stew",
+  "Mushroom Risotto",
+  "Pumpkin Soup"
+];
 
-export default async function UserHomePage(props: Props) {
-  const { params } = await props
-  const { username } = await params
-  const profile = await getUserProfileByUsername(username)
-  console.log('🧪 Is uploadedRecipes a RecipeList?', profile!.uploadedRecipes instanceof RecipeList)
-  console.log('🧪 uploadedRecipes:', profile!.uploadedRecipes)
-  
-  if (!profile) {
-    console.log('❌ No user found for:', username)
-    return notFound()
-  }
+const myRecipes = [
+  "Grandma's Apple Pie",
+  "Homemade Pizza",
+  "Blueberry Pancakes",
+  "Chili Con Carne",
+  "Baked Ziti",
+  "Tiramisu",
+  "Guacamole",
+  "Hummus",
+  "Stuffed Peppers",
+  "Lemon Chicken"
+];
 
-  const uploadedList: RecipeList = profile.uploadedRecipes!
-  const uploadedIds: string[] = uploadedList.toArray();
-  
-  const savedList : RecipeList = profile.savedRecipes!
-  const savedIds : string[] = savedList.toArray();
+const HomePage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<"saved" | "my">("saved");
+  const [currentRecipes, setCurrentRecipes] = useState<string[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [profileImage, setProfileImage] = useState<string>("https://via.placeholder.com/100 ");
 
-  return ( 
-    <>
-      <Navbar />
+  // Simulate AJAX loading
+  useEffect(() => {
+    setLoading(true);
+    setTimeout(() => {
+      setCurrentRecipes(activeTab === "saved" ? savedRecipes : myRecipes);
+      setLoading(false);
+    }, 500);
+  }, [activeTab]);
 
-      <main className="p-8 flex flex-col items-center text-center">
-        <div className="w-32 h-32 relative rounded-full overflow-hidden border-4 border-green-500 shadow-lg">
-          {profile.photoURL ? (
-            <Image
-              src={profile.photoURL}
-              alt="Profile Picture"
-              fill
-              className="object-cover"
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === "image/jpeg") {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (typeof event.target?.result === "string") {
+          setProfileImage(event.target.result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert("Please upload a .jpg file.");
+    }
+  };
+
+  return (
+    <div>
+      {/* Top Navigation Bar */}
+      <div className="navbar">
+        <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>Recipe Logger</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
+          <a href="/pages/home">Home</a> |
+          <a href="/pages/explore">Explore</a> |
+          <a href="/pages/cart">Cart </a> |
+          <img
+            src="https://via.placeholder.com/30 "
+            alt="User Profile"
+            style={{ borderRadius: "50%", width: "30px", height: "30px" }}
+          />
+          <span>Username</span>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="container">
+        {/* Left Sidebar Column */}
+        <div className="filters-column">
+          {/* User Info Section */}
+          <div style={{ display: "flex", alignItems: "center", marginBottom: "1em" }}>
+            <label htmlFor="profile-upload" style={{ cursor: "pointer" }}>
+              <img
+                src={profileImage}
+                alt="Profile"
+                style={{
+                  width: "70px",
+                  height: "70px",
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "2px solid #ddd"
+                }}
+              />
+            </label>
+            <input
+              id="profile-upload"
+              type="file"
+              accept=".jpg"
+              onChange={handleFileUpload}
+              style={{ display: "none" }}
             />
+            <span style={{ marginLeft: "1em", fontSize: "1.2em" }}>Username</span>
+          </div>
+
+          {/* Menu Items - Boxed */}
+          <div className="menu-section">
+            <div
+              onClick={() => setActiveTab("saved")}
+              className={activeTab === "saved" ? "active" : ""}
+              style={{ cursor: "pointer" }}
+            >
+              Saved Recipes
+            </div>
+            <div
+              onClick={() => setActiveTab("my")}
+              className={activeTab === "my" ? "active" : ""}
+              style={{ cursor: "pointer" }}
+            >
+              My Recipes
+            </div>
+          </div>
+
+         {/* Post/Delete Recipe Buttons - Boxed */}
+          <div className="menu-section">
+            <a
+              href="/upload"
+              style={{
+                padding: "0.5em",
+                cursor: "pointer",
+                borderRadius: "5px",
+                transition: "background-color 0.3s",
+                display: "block",
+                textDecoration: "none",
+                color: "inherit"
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d6ead6")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+            >
+              Post Recipe
+            </a>
+            <div
+              onClick={() => alert("Delete Recipe clicked")}
+              style={{
+                padding: "0.5em",
+                cursor: "pointer",
+                borderRadius: "5px",
+                transition: "background-color 0.3s"
+              }}
+            >
+              Delete Recipe
+            </div>
+          </div>
+        </div>
+
+        {/* Right Main Content Column */}
+        <div className="main-content">
+          <h2>{activeTab === "saved" ? "Saved Recipes" : "My Recipes"}</h2>
+          {loading ? (
+            <p>Loading recipes...</p>
           ) : (
-            <div className="w-full h-full bg-gray-300 flex items-center justify-center">
-              <span className="text-gray-600">No Photo</span>
+            <div>
+              {currentRecipes.map((recipe, index) => (
+                <div key={index} className="recipe-card">
+                  {recipe}
+                </div>
+              ))}
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
 
-        <h1 className="mt-4 text-3xl font-bold">{profile.name}</h1>
-        <p className="text-gray-500">@{profile.username}</p>
-
-        {/* Uploaded Recipes */}
-        <section className="mt-12 w-full max-w-6xl text-left">
-          <h2 className="text-2xl font-semibold mb-4">Uploaded Recipes</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {uploadedIds.length === 0 ? (
-              <p className="col-span-full text-gray-500">No uploaded recipes yet.</p>
-            ) : (
-              uploadedIds.map((id, i) => (
-                <RecipeCard
-                  key={i}
-                  title={`Recipe ${id}`} // Placeholder title
-                  author={profile.username ?? "No Author"}
-                  imageUrl="https://via.placeholder.com/300x200"
-                  score={0}
-                />
-              ))
-            )}
-          </div>
-        </section>
-
-        {/* Saved Recipes */}
-        <section className="mt-12 w-full max-w-6xl text-left">
-          <h2 className="text-2xl font-semibold mb-4">Saved Recipes</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {savedIds.length === 0 ? (
-              <p className="col-span-full text-gray-500">No saved recipes yet.</p>
-            ) : (
-              savedIds.map((id, i) => (
-                <RecipeCard
-                  key={i}
-                  title={`Recipe ${id}`} // Placeholder
-                  author={`Unknown`} // Optional: fetch actual author later
-                  imageUrl="https://via.placeholder.com/300x200"
-                  score={0}
-                />
-              ))
-            )}
-          </div>
-        </section>
-      </main>
-    </>
-  )
-}
+export default HomePage;
