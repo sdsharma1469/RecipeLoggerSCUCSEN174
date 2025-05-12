@@ -71,11 +71,6 @@ const RecipeTemplate: React.FC = () => {
                 <h2 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Difficulty:</h2>
                 <h3 style={{ fontSize: "1.1em"}}>Author Rating: {authorRating}/10</h3>
                 <h3 style={{ fontSize: "1.1em"}}>User Rating: {userRating}/10</h3>
-                <ul>
-                    {recipeIngredients.map((ingredient, index) => (
-                    <li key={index}>{ingredient}</li>
-                    ))}
-                </ul>
                 <h2 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Reviews:</h2>
             </div>
         </div>
