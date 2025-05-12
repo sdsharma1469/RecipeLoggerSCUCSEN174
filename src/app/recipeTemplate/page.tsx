@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import './recipeTemplate.css' 
 import { Rubik_80s_Fade } from "next/font/google";
 
+// test variables
 const recipeName = "Test Recipe";
-
 const recipeIngredients = [
     "2 Apples",
     "4 Bananas"
@@ -17,11 +17,8 @@ const recipeSteps = [
     "Me too bro.",
     "Me too."
 ];
-
 const starRating = 5;
-
 const authorRating = 7;
-
 const userRating = 8;
 
 const RecipeTemplate: React.FC = () => {
