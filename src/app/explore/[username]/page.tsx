@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
 import './explore.css'
 
 interface Recipe {
@@ -17,10 +18,14 @@ interface Recipe {
 }
 
 const ExplorePage: React.FC = () => {
+  const { username } = useParams();
   const filters = ['Vegetarian', 'Halal', 'Vegan', 'Lactose-Free']
   const [filterStates, setFilterStates] = useState<Record<string, string>>({})
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterSearchQuery, setFilterSearchQuery] = useState('')
+  const [filterSearchInput, setFilterSearchInput] = useState('')
 
   // Toggle filter state: none -> whitelisted -> blacklisted
   const toggleFilter = (name: string) => {
@@ -52,8 +57,18 @@ const ExplorePage: React.FC = () => {
     fetchRecipes()
   }, [])
 
-  // Filter logic (optional: expand based on whitelist/blacklist)
+  // Ensures that the visible filters logic ONLY applies when filterSearchQuery is set first!
+  const visibleFilters = filterSearchQuery ? filters.filter(filter => filter.toLowerCase().includes(filterSearchQuery.toLowerCase())) : filters
+
+  // Filter logic for whitelist, blacklist, and search
   const filteredRecipes = recipes.filter((recipe) => {
+    // This line ensures that we filter by name search
+    const matchsSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
+
+    // Skips this particular recipe if it doesn't match the search query
+    if (!matchsSearch) return false
+
+    // The following applies the tag filter states
     return filters.every((filter) => {
       const state = filterStates[filter] || 'none'
       if (state === 'whitelisted') {
@@ -75,17 +90,18 @@ const ExplorePage: React.FC = () => {
   return (
     <div>
       <div className="navbar">
-        <div>Explore Recipes</div>
-        <div>
-          <a href="#">Home</a> | <a href="#">My Recipes</a> | <a href="#">Profile</a>
+        <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>Explore Recipes</div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
+          <a href={`/home/${username}`}>Home</a> |
+          <a href={`/explore/${username}`}>Explore</a> |
+          <a href="/cart">Cart </a> |
         </div>
       </div>
 
       <div className="container">
         <div className="main-content">
           <div className="search-filter-bar">
-            <input type="text" placeholder="Search recipes..." />
-            <input type="text" placeholder="Filter by tags..." />
+            <input className="recipe-search" type="text" placeholder="Search recipes by name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
 
           {loading ? (
@@ -94,20 +110,20 @@ const ExplorePage: React.FC = () => {
             filteredRecipes.map((recipe) => (
               <div className="recipe-block" key={recipe.recipeId}>
                 <div className="recipe-header">{recipe.name}</div>
-                <img
-                  src="https://via.placeholder.com/600x200"
-                  alt={recipe.name}
-                  className="recipe-image"
-                />
+                
+                <img src="https://via.placeholder.com/600x200" alt={recipe.name} className="recipe-image"/>
+                
                 <div className="recipe-description">
                   {recipe.steps[0]?.slice(0, 100) || 'No description available...'}
                 </div>
+                
                 <div className="recipe-tags">
                   {recipe.vegetarian && <span>Vegetarian</span>}
                   {recipe.vegan && <span>Vegan</span>}
                   {recipe.halal && <span>Halal</span>}
                   {recipe.lactoseFree && <span>Lactose-Free</span>}
                 </div>
+                
                 <div className="recipe-footer">
                   <div className="ratings">
                     <div>Rating: {recipe.rating}/5</div>
@@ -115,6 +131,7 @@ const ExplorePage: React.FC = () => {
                   </div>
                   <div className="price">Free</div>
                 </div>
+              
               </div>
             ))
           )}
@@ -122,13 +139,14 @@ const ExplorePage: React.FC = () => {
 
         <div className="filters-column">
           <div className="filter-title">Filters</div>
-          <input
-            type="text"
-            placeholder="Search filters..."
-            style={{ width: '100%', padding: '0.5em', marginBottom: '1em' }}
-          />
+          <input className="filter-search" type="text" placeholder="Search filters..." style={{ width: '100%', padding: '0.5em', marginBottom: '1em' }} value={filterSearchQuery} onChange={(e) => setFilterSearchQuery(e.target.value)} onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              setFilterSearchQuery(filterSearchInput.trim())
+            }
+          }}/>
+          
           <div className="filter-list">
-            {filters.map((filter) => (
+            {visibleFilters.map((filter) => (
               <button
                 key={filter}
                 onClick={() => toggleFilter(filter)}
@@ -139,6 +157,7 @@ const ExplorePage: React.FC = () => {
             ))}
           </div>
         </div>
+      
       </div>
     </div>
   )

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useParams } from 'next/navigation'
 import "./home.css";
 
 // Mock data arrays
@@ -30,6 +31,7 @@ const myRecipes = [
 ];
 
 const HomePage: React.FC = () => {
+  const { username } = useParams();
   const [activeTab, setActiveTab] = useState<"saved" | "my">("saved");
   const [currentRecipes, setCurrentRecipes] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -65,9 +67,9 @@ const HomePage: React.FC = () => {
       <div className="navbar">
         <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>Recipe Logger</div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
-          <a href="/pages/home">Home</a> |
-          <a href="/pages/explore">Explore</a> |
-          <a href="/pages/cart">Cart </a> |
+          <a href={`/home/${username}`}>Home</a> |
+          <a href={`/explore/${username}`}>Explore</a> |
+          <a href="/cart">Cart </a> |
           <img
             src="https://via.placeholder.com/30 "
             alt="User Profile"
