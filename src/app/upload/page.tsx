@@ -1,7 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { generateRecipe } from '../../utils/generateRecipe'
+import { generateRecipe } from '../../lib/utils/Recipes/generateRecipe'
+import { auth } from '@/lib/firebase-client' // ✅ Use your shared instance
+import { getIdToken } from 'firebase/auth'
+import {uploadRecipeClientSide} from '@/lib/utils/Recipes/Upload'
+
 
 export default function UploadRecipePage() {
   const [name, setName] = useState('')
@@ -13,9 +17,17 @@ export default function UploadRecipePage() {
   const [vegan, setVegan] = useState(false)
   const [vegetarian, setVegetarian] = useState(false)
   const [lactoseFree, setLactoseFree] = useState(false)
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+  
+    const user = auth.currentUser
+    if (!user) {
+      setStatus('❌ User not logged in.')
+      return
+    }
+  
+    const token = await user.getIdToken()
+  
     const recipe = generateRecipe({
       name,
       ingredients,
@@ -26,15 +38,11 @@ export default function UploadRecipePage() {
       lactoseFree,
       rating,
     })
+  
 
-    const res = await fetch('/api/recipes/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(recipe),
-    })
+    const success = await uploadRecipeClientSide(recipe)
 
-    const data = await res.json()
-    if (data.success) {
+    if (success) {
       setStatus('✅ Recipe uploaded!')
       setName('')
       setIngredients('')
@@ -48,7 +56,7 @@ export default function UploadRecipePage() {
       setStatus('❌ Failed to upload recipe.')
     }
   }
-
+  
   return (
     <div style={{ padding: '2rem' }}>
       <h1>Upload a Recipe</h1>

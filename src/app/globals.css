@@ -19,6 +19,34 @@
   }
 }
 
+#nav{
+  list-style-type:none;
+  margin:0;
+  padding:0;
+  background-color:black;
+  overflow:hidden;
+  width:100%;
+  top:0;
+}
+.navLi{
+  display:inline-block;
+  text-align: center;
+}
+.navA{
+  text-decoration:none;
+  color:white;
+  display:block;
+}
+.navLi .navA{
+  padding-top: 10px;
+  padding-left: 8px;
+  padding-bottom: 10px;
+  padding-right: 8px;
+}
+li.navLi a:hover{
+  background-color:green;
+}
+
 body {
   margin: 0;
   font-family: sans-serif;
