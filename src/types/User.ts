@@ -1,4 +1,4 @@
-import { RecipeList } from "./RecipeList"
+import { RecipeList } from "./RecipeIdList"
 
 export interface UserProfile {
     uid: string

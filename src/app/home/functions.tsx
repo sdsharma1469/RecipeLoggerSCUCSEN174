@@ -1,7 +1,7 @@
 import { getAuth } from 'firebase/auth'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import { UserProfile } from '@/types/User'
-import { RecipeList } from '@/types/RecipeList' // ✅ Your wrapper class
+import { RecipeList } from '@/types/RecipeIdList' // ✅ Your wrapper class
 
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   const auth = getAuth()

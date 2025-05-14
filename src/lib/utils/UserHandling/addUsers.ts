@@ -1,21 +1,28 @@
-import { getFirestore, doc, setDoc } from 'firebase/firestore'
+// lib/utils/UserHandling/addUsers.ts
+
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore'
 import { User } from 'firebase/auth'
 
-export async function addUserToFirestore(user: User) {
-  console.log('📥 addUserToFirestore called with:', user.email)
-  const username = user.displayName?.toLowerCase().replace(/\s+/g, '') || user.email?.split('@')[0]
+export async function addUserToFirestore(user: User): Promise<'created' | 'existing'> {
+  console.log('📥 Checking/Adding user in Firestore:', user.email)
   const db = getFirestore()
-  try {
-    const userRef = doc(db, 'Users', user.uid)
-    await setDoc(userRef, {
-      email: user.email,
-      username: username|| '',
-      createdAt: new Date(),
-      SavedRecipes : [],
-      UploadedRecipes : [],
-    }, { merge: true })
-    console.log('✅ User added to Firestore')
-  } catch (error) {
-    console.error('❌ Firestore write error:', error)
+  const userRef = doc(db, 'Users', user.uid)
+  const docSnap = await getDoc(userRef)
+
+  if (docSnap.exists()) {
+    return 'existing'
   }
+
+  const username = user.displayName?.toLowerCase().replace(/\s+/g, '') || user.email?.split('@')[0] || ''
+
+  await setDoc(userRef, {
+    email: user.email,
+    username,
+    createdAt: serverTimestamp(),
+    SavedRecipes: [],
+    UploadedRecipes: [],
+  })
+
+  console.log('✅ New user profile created')
+  return 'created'
 }

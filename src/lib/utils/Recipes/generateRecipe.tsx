@@ -1,3 +1,4 @@
+// lib/utils/Recipes/generateRecipe.ts
 import { v4 as uuidv4 } from 'uuid'
 
 export function generateRecipe({
@@ -30,5 +31,7 @@ export function generateRecipe({
     lactoseFree,
     rating: parseInt(String(rating), 10),
     comments: [],
+    createdAt: new Date(), // ✅ fix here
   }
 }
+

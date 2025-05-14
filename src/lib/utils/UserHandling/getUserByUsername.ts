@@ -1,7 +1,7 @@
 import { db } from '@/lib/firebase-client'
 import { collection, query, where, getDocs } from 'firebase/firestore'
 import { UserProfile } from '@/types/User'
-import { RecipeList } from '@/types/RecipeList'
+import { RecipeList } from '@/types/RecipeIdList'
 
 export async function getUserProfileByUsername(username: string): Promise<UserProfile | null> {
   const q = query(collection(db, 'Users'), where('username', '==', username))

@@ -16,6 +16,7 @@ export class RecipeList {
     }
   
     size(): number {
+      
       return this.items.length
     }
   

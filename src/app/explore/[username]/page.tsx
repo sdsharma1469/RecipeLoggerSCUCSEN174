@@ -3,19 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import './explore.css'
+import type { Recipe } from '@/types/Recipe'
 
-interface Recipe {
-  recipeId: string
-  name: string
-  ingredients: string[]
-  steps: string[]
-  halal: boolean
-  vegan: boolean
-  vegetarian: boolean
-  lactoseFree: boolean
-  rating: number
-  comments: string[]
-}
 
 const ExplorePage: React.FC = () => {
   const { username } = useParams();
@@ -45,7 +34,7 @@ const ExplorePage: React.FC = () => {
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const res = await fetch('/api/allRecipes')
+        const res = await fetch('/api/GetAllRecipes')
         const data = await res.json()
         setRecipes(data.recipes)
       } catch (err) {
@@ -118,11 +107,12 @@ const ExplorePage: React.FC = () => {
                 </div>
                 
                 <div className="recipe-tags">
-                  {recipe.vegetarian && <span>Vegetarian</span>}
-                  {recipe.vegan && <span>Vegan</span>}
-                  {recipe.halal && <span>Halal</span>}
-                  {recipe.lactoseFree && <span>Lactose-Free</span>}
+                  {recipe.vegetarian && <span key="vegetarian">Vegetarian</span>}
+                  {recipe.vegan && <span key="vegan">Vegan</span>}
+                  {recipe.halal && <span key="halal">Halal</span>}
+                  {recipe.lactoseFree && <span key="lactoseFree">Lactose-Free</span>}
                 </div>
+
                 
                 <div className="recipe-footer">
                   <div className="ratings">
