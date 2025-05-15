@@ -1,10 +1,7 @@
-//Gonna find a way to make this not just hardcoded but put it here for now
-const API_KEY = "HzOeohtbvulEGkGIi4HRYdOzDlSiJHcpoCnrs2Yx";
+const API_KEY = process.env.NEXT_PUBLIC_USDA_API_KEY;
 
 export async function fetchIngredientData(ingredientName: string) {
-  const response = await fetch(
-    `https://api.nal.usda.gov/fdc/v1/foods/search?query=${ingredientName}&api_key=${API_KEY}`
-  );
+  const response = await fetch(`https://api.nal.usda.gov/fdc/v1/foods/search?query=${ingredientName}&api_key=${API_KEY}`);
 
   if (!response.ok) {
     throw new Error("Failed to fetch ingredient data");
