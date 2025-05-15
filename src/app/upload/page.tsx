@@ -18,15 +18,11 @@ export default function UploadRecipePage() {
     measurement: string;
     name: string;
   }[]>([
-    { quantity: "", measurement: "cup", name: "" },
-    { quantity: "", measurement: "cup", name: "" },
-    { quantity: "", measurement: "cup", name: "" },
-    { quantity: "", measurement: "cup", name: "" },
-    { quantity: "", measurement: "cup", name: "" },
+    { quantity: "", measurement: "cup", name: "" }
   ]);
-  const [steps, setSteps] = useState<{ id: string; content: string }>(
-    Array.from({ length: 5 }, (_, i) => ({ id: `step-${i + 1}`, content: "" }))
-  );
+  const [steps, setSteps] = useState<{ id: string; content: string }>([
+    { id: "step-1", content: "" }
+  ]);
   const [tags, setTags] = useState<Record<string, boolean>>({
     vegan: false,
     vegetarian: false,
@@ -70,7 +66,7 @@ export default function UploadRecipePage() {
   };
 
   const handleRemoveIngredient = (index: number) => {
-    if (ingredients.length <= 5) return;
+    if (ingredients.length <= 1) return;
     setIngredients(ingredients.filter((_, i) => i !== index));
   };
 
@@ -91,7 +87,7 @@ export default function UploadRecipePage() {
   };
 
   const handleRemoveStep = (id: string) => {
-    if (steps.length <= 5) return;
+    if (steps.length <= 1) return;
     setSteps(steps.filter((step) => step.id !== id));
   };
 
@@ -156,8 +152,8 @@ export default function UploadRecipePage() {
     setTitle("");
     setCreatorRating(0);
     setDifficulty(0);
-    setIngredients(Array(5).fill({ quantity: "", measurement: "cup", name: "" }));
-    setSteps(Array.from({ length: 5 }, (_, i) => ({ id: `step-${i + 1}`, content: "" })));
+    setIngredients([{ quantity: "", measurement: "cup", name: "" }]);
+    setSteps([{ id: "step-1", content: "" }]);
     setTags({
       vegan: false,
       vegetarian: false,
@@ -317,13 +313,13 @@ export default function UploadRecipePage() {
                 <button
                   type="button"
                   onClick={() => handleRemoveIngredient(index)}
-                  disabled={index === 0}
+                  disabled={ingredients.length <= 1}
                   style={{
                     padding: "0.5em",
                     cursor: "pointer",
                     borderRadius: "5px",
-                    transition: "background-color 0.3s",
                     border: "none",
+                    transition: "background-color 0.3s",
                   }}
                   onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d6ead6")}
                   onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
@@ -353,7 +349,7 @@ export default function UploadRecipePage() {
               <button
                 type="button"
                 onClick={() => handleRemoveIngredient(ingredients.length - 1)}
-                disabled={ingredients.length <= 5}
+                disabled={ingredients.length <= 1}
                 style={{
                   padding: "0.5em",
                   cursor: "pointer",
@@ -394,7 +390,7 @@ export default function UploadRecipePage() {
                 <button
                   type="button"
                   onClick={() => handleRemoveStep(step.id)}
-                  disabled={steps.length <= 5}
+                  disabled={steps.length <= 1}
                   style={{
                     padding: "0.5em",
                     cursor: "pointer",
@@ -430,7 +426,7 @@ export default function UploadRecipePage() {
               <button
                 type="button"
                 onClick={() => setSteps(steps.slice(0, -1))}
-                disabled={steps.length <= 5}
+                disabled={steps.length <= 1}
                 style={{
                   padding: "0.5em",
                   cursor: "pointer",
