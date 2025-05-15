@@ -109,7 +109,7 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
       <div id="ingredient-buy">
         <br/>
         <h2><strong>Where to Buy</strong></h2>
-        <a href={`https://www.amazon.com/s?k=${encodeURIComponent(ingredientName)}&i=amazonfresh`} target="_blank" rel="noopener noreferrer">
+        <a className="amazon-link" href={`https://www.amazon.com/s?k=${encodeURIComponent(ingredientName)}&i=amazonfresh`} target="_blank" rel="noopener noreferrer">
           Search for {ingredientName} on Amazon Fresh
         </a>
       </div>

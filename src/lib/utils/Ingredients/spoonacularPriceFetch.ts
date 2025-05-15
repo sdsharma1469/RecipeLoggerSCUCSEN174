@@ -1,11 +1,8 @@
 const SPOONACULAR_API_KEY = process.env.NEXT_PUBLIC_SPOONACULAR_API_KEY;
 
 async function searchSpoonacularIngredient(query: string) {
-  const res = await fetch(
-    `https://api.spoonacular.com/food/ingredients/search?query=${encodeURIComponent(
-      query
-    )}&number=1&apiKey=${SPOONACULAR_API_KEY}`
-  );
+  //Searches for the ingredient based on the query in the URL.
+  const res = await fetch(`https://api.spoonacular.com/food/ingredients/search?query=${encodeURIComponent(query)}&number=1&apiKey=${SPOONACULAR_API_KEY}`);
   return await res.json();
 }
 
@@ -21,16 +18,20 @@ export async function fetchIngredientPrice(ingredientName: string) {
       searchData = await searchSpoonacularIngredient(fallback);
     }
 
+    // Checks if no ingredients are found in the spoonacular API
     if (!searchData.results || searchData.results.length === 0) {
       throw new Error('No ingredient found after fallback.');
     }
 
+    // Saves ingredient ID which is used to get the more detailed information
     const ingredientId = searchData.results[0].id;
 
+    //Detailed results using the ingredient ID
     const detailedRes = await fetch(
       `https://api.spoonacular.com/food/ingredients/${ingredientId}/information?amount=1&unit=piece&apiKey=${SPOONACULAR_API_KEY}`
     );
 
+    // Gathers the actual json the detailed response returns
     const detailedInfo = await detailedRes.json();
 
     return {
@@ -40,7 +41,6 @@ export async function fetchIngredientPrice(ingredientName: string) {
       estimatedCost: detailedInfo.estimatedCost
         ? `$${(detailedInfo.estimatedCost.value / 100).toFixed(2)} ${detailedInfo.estimatedCost.unit}`
         : 'Price not available',
-      possibleUnits: detailedInfo.possibleUnits,
     };
   } catch (error) {
     console.error('Spoonacular price fetch error:', error);
