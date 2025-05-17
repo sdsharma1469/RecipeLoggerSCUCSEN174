@@ -1,8 +1,10 @@
 'use client'
 
 import React, { useState, useEffect } from "react";
+import { useParams } from 'next/navigation';
+import type { Recipe } from '@/types/Recipe';
+import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
 import './recipeTemplate.css' 
-import { Rubik_80s_Fade } from "next/font/google";
 
 // test variables
 const recipeName = "Test Recipe";
@@ -22,10 +24,12 @@ const authorRating = 7;
 const userRating = 8;
 
 const RecipeTemplate: React.FC = () => {
+    const { id } = useParams() as { id: string };
+    
     useEffect(() => {
         const fetchRecipe = async () => {
         try {
-
+            
         } catch (error) {
             console.error("Error fetching recipe: ", error);
         }
@@ -38,7 +42,7 @@ const RecipeTemplate: React.FC = () => {
         <div className="navbar">
             <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>View Recipe</div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
-            <a href="home/shaunaksharma">Home</a> | <a href="/explore">Explore</a> | <a href="/profile">Profile</a>
+            <a href="home/shaunaksharma">Home</a> | <a href="/explore">Explore</a> | <a href="/profile">Profile{id}</a>
             </div>
         </div>
         <div className="container">
