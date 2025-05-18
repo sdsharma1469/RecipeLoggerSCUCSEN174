@@ -6,6 +6,7 @@ import type { Recipe } from '@/types/Recipe';
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
 import './recipeTemplate.css' 
 
+
 // test variables
 const recipeName = "Test Recipe";
 const recipeIngredients = [
@@ -36,13 +37,13 @@ const RecipeTemplate: React.FC = () => {
         };
         fetchRecipe();
     }, []);
-
+    
     return (
         <div>
         <div className="navbar">
             <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>View Recipe</div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
-            <a href="home/shaunaksharma">Home</a> | <a href="/explore">Explore</a> | <a href="/profile">Profile{id}</a>
+            <a href="home/shaunaksharma">Home</a> | <a href="/explore">Explore</a> | <a href="/profile">Profile</a>
             </div>
         </div>
         <div className="container">
