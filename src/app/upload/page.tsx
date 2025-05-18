@@ -2,12 +2,11 @@
 import React, { useState } from "react";
 import "./home.css";
 
-// Firebase Auth
-import { auth } from "@/lib/firebase-client";
-import { getIdToken } from "firebase/auth";
-
-// Upload utility
-import { uploadRecipeClientSide } from "@/lib/utils/Recipes/Upload";
+// Mock Firebase upload function – replace this with your real one
+const uploadRecipeClientSide = async (recipe: any) => {
+  console.log("Uploading recipe:", recipe);
+  return true; // Simulate success
+};
 
 export default function UploadRecipePage() {
   const [title, setTitle] = useState("");
@@ -32,23 +31,9 @@ export default function UploadRecipePage() {
     soy: false,
     peanuts: false,
   });
-  const [tools, setTools] = useState<Record<string, boolean>>({
-    pot: false,
-    knife: false,
-    pan: false,
-    oven: false,
-    toasterOven: false,
-    blender: false,
-    mixingBowl: false,
-    whisk: false,
-    tongs: false,
-    spatula: false,
-    cuttingBoard: false,
-    measuringCupSpoon: false,
-    bakingSheet: false,
-    foodProcessor: false,
-  });
   const [status, setStatus] = useState("");
+
+  const user = true; // Replace with actual auth check if needed
 
   const MEASUREMENT_OPTIONS = [
     "whole",
@@ -116,49 +101,49 @@ export default function UploadRecipePage() {
     setTags((prev) => ({ ...prev, [tag]: !prev[tag] }));
   };
 
-  const handleToolToggle = (tool: keyof typeof tools) => {
-    setTools((prev) => ({ ...prev, [tool]: !prev[tool] }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    /*const user = auth.currentUser;
     if (!user) {
       setStatus("❌ User not logged in.");
       return;
     }
-      */
+
+    if (
+      !title ||
+      ingredients.some((ing) => !ing.name || !ing.quantity) ||
+      steps.some((s) => !s.content)
+    ) {
+      setStatus("❌ Please fill in all fields.");
+      return;
+    }
+
+    setStatus("✅ Uploading recipe...");
+
+    const recipeData = {
+      title,
+      creatorRating,
+      difficulty,
+      ingredients: ingredients.map((ing) => ({
+        quantity: parseFloat(ing.quantity),
+        measurement: ing.measurement,
+        name: ing.name.trim(),
+      })),
+      steps: steps.map((step) => step.content.trim()),
+      tags,
+      image,
+    };
 
     try {
-      const token = await user.getIdToken();
-
-      const recipeData = {
-        title,
-        creatorRating,
-        difficulty,
-        ingredients: ingredients.map((ing) => ({
-          quantity: parseFloat(ing.quantity),
-          measurement: ing.measurement,
-          name: ing.name.trim(),
-        })),
-        steps: steps.map((s) => s.content.trim()),
-        tags,
-        tools,
-        image,
-      };
-
-      // Actual upload call using your existing Firebase function
       const success = await uploadRecipeClientSide(recipeData);
-
       if (success) {
-        setStatus("✅ Recipe uploaded!");
+        setStatus("🎉 Recipe uploaded successfully!");
         resetForm();
       } else {
         setStatus("❌ Failed to upload recipe.");
       }
-    } catch (err) {
-      console.error("Upload error:", err);
+    } catch (error) {
+      console.error("Upload error:", error);
       setStatus("❌ Error uploading recipe.");
     }
   };
@@ -176,22 +161,6 @@ export default function UploadRecipePage() {
       halal: false,
       soy: false,
       peanuts: false,
-    });
-    setTools({
-      pot: false,
-      knife: false,
-      pan: false,
-      oven: false,
-      toasterOven: false,
-      blender: false,
-      mixingBowl: false,
-      whisk: false,
-      tongs: false,
-      spatula: false,
-      cuttingBoard: false,
-      measuringCupSpoon: false,
-      bakingSheet: false,
-      foodProcessor: false,
     });
     setImage(null);
   };
@@ -293,36 +262,6 @@ export default function UploadRecipePage() {
                   </span>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Tools & Appliances */}
-          <div className="menu-section">
-            <strong>Required Tools & Appliances:</strong>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5em", marginTop: "0.5em" }}>
-              {Object.keys(tools).map((tool) => (
-                <label
-                  key={tool}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5em",
-                    padding: "0.3em 0.5em",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                    transition: "background-color 0.3s",
-                  }}
-                  onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d6ead6")}
-                  onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                >
-                  <input
-                    type="checkbox"
-                    checked={tools[tool as keyof typeof tools]}
-                    onChange={() => handleToolToggle(tool as keyof typeof tools)}
-                  />
-                  {tool.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
-                </label>
-              ))}
             </div>
           </div>
 
@@ -503,9 +442,9 @@ export default function UploadRecipePage() {
             </div>
           </div>
 
-          {/* Tags / Dietary Filters */}
+          {/* Tags / Filters */}
           <div className="menu-section">
-            <strong>Dietary Filters:</strong>
+            <strong>Tags:</strong>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5em", marginTop: "0.5em" }}>
               {Object.keys(tags).map((tag) => (
                 <label
@@ -527,7 +466,7 @@ export default function UploadRecipePage() {
                     checked={tags[tag as keyof typeof tags]}
                     onChange={() => handleTagToggle(tag as keyof typeof tags)}
                   />
-                  {tag.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
+                  {tag}
                 </label>
               ))}
             </div>
