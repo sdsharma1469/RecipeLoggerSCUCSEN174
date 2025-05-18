@@ -6,7 +6,6 @@ import type { Recipe } from '@/types/Recipe';
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
 import './recipeTemplate.css' 
 
-
 // test variables
 const recipeName = "Test Recipe";
 const recipeIngredients = [
