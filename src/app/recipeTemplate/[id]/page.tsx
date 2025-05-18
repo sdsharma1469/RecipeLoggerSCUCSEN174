@@ -72,16 +72,17 @@ const RecipeTemplate: React.FC = () => {
                 </ol>
             </div>
             <div className="right-column">
-                <h2 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Stars: </h2>
                 <div className="flex text-yellow-500">
                     {stars.map((star, index) => (
-                        <div style={{ fontSize: "1.5em" }} key={index}>{star === 'full' ? '★' : star === 'half' ? '⯪' : '☆'}</div>
+                        <div style={{ fontSize: "1.6em" }} key={index}>{star === 'full' ? '★' : star === 'half' ? '⯪' : '☆'}</div>
                     ))}
                 </div>
-                <h2 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Difficulty:</h2>
-                <h3 style={{ fontSize: "1.1em"}}>Author Rating: {recipe.authorDiff}/10</h3>
-                <h3 style={{ fontSize: "1.1em"}}>User Rating: {recipe.userDiff}/10</h3>
-                <h3 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Tags:</h3>
+                <h2 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Difficulty</h2>
+                <h3 style={{ fontSize: "1.1em"}}>From author: {recipe.authorDiff}/10</h3>
+                <h3 style={{ fontSize: "1.1em"}}>From users: {recipe.userDiff}/10</h3>
+                <h2 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Average Price </h2>
+                <h3 style={{ fontSize: "1.1em"}}>${recipe.cost}</h3>
+                <h3 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Tags</h3>
                 {recipe.halal ? <p style={{ fontSize: "1.1em"}}>Halal</p> : <div></div>}
                 {recipe.lactoseFree ? <p style={{ fontSize: "1.1em"}}>Lactose Free</p> : <div></div>}
                 {recipe.vegan ? <p style={{ fontSize: "1.1em"}}>Vegan</p> : <div></div>}
