@@ -126,32 +126,44 @@ const HomePage: React.FC = () => {
           </div>
 
           <div className="menu-section">
-          <button
-            onClick={async () => {
-              const isOwner = await isOwnPage(username)
-              if (!isOwner) {
-                alert('⚠️ You must be on your own homepage to upload a recipe.')
-                return
-              }
-              window.location.href = '/upload'
-            }}
-          >
-            Post Recipe
-          </button>
+  <a
+    onClick={async (e) => {
+      const isOwner = await isOwnPage(username);
+      if (!isOwner) {
+        e.preventDefault(); // prevent default link behavior
+        alert('⚠️ You must be on your own homepage to upload a recipe.');
+        return;
+      }
+      window.location.href = '/upload';
+    }}
+    href="#"
+    style={{
+      display: 'block',
+      padding: '0.5em',
+      textDecoration: 'none',
+      color: 'inherit',
+      borderRadius: '5px',
+      cursor: 'pointer',
+      transition: 'background-color 0.3s'
+    }}
+    onMouseOver={(e) => (e.currentTarget.style.backgroundColor = '#d6ead6')}
+    onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+  >
+    Post Recipe
+  </a>
 
-
-            <div
-              onClick={() => alert('Delete Recipe clicked')}
-              style={{
-                padding: '0.5em',
-                cursor: 'pointer',
-                borderRadius: '5px',
-                transition: 'background-color 0.3s',
-              }}
-            >
-              Delete Recipe
-            </div>
-          </div>
+  <div
+    onClick={() => alert('Delete Recipe clicked')}
+    style={{
+      padding: '0.5em',
+      cursor: 'pointer',
+      borderRadius: '5px',
+      transition: 'background-color 0.3s'
+    }}
+  >
+    Delete Recipe
+  </div>
+</div>
         </div>
 
         <div className="main-content">
