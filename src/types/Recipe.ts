@@ -12,6 +12,8 @@ export interface Recipe {
   lactoseFree: boolean
   rating: number
   comments: string[]
+  author: string[]
+  cost: number;
 }
 
   

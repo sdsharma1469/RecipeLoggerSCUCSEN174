@@ -45,3 +45,11 @@ body {
   border-radius: 1em;
   border: 1px solid #ccc; 
 }
+
+.tag-container {
+  width: 75%;
+  background-color: #cce5cc;
+  padding: 1em;
+  border-radius: 1em;
+  border: 1px solid #ccc; 
+}
