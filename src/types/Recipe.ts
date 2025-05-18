@@ -1,7 +1,9 @@
 // types/recipe.ts
 
+import { Timestamp } from "firebase-admin/firestore"
+
 export interface Recipe {
-  createdAt : any
+  createdAt: Timestamp
   recipeId: string
   name: string
   ingredients: string[]
@@ -14,6 +16,8 @@ export interface Recipe {
   comments: string[]
   author: string[]
   cost: number;
+  authorDiff: number;
+  userDiff: number;
 }
 
   

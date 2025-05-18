@@ -46,10 +46,11 @@ body {
   border: 1px solid #ccc; 
 }
 
-.tag-container {
-  width: 75%;
-  background-color: #cce5cc;
+.comment-section {
+  width: 70%;
+  background-color: #f7f7d9;
   padding: 1em;
   border-radius: 1em;
   border: 1px solid #ccc; 
+  margin-left: 2em;
 }
