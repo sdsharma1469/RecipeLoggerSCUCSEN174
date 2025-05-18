@@ -23,12 +23,26 @@ export async function fetchAllRecipesByUserId(userId: string): Promise<RecipeObj
 
       if (recipeSnap.exists()) {
         const data = recipeSnap.data()
-        recipeList.append({
-          createdAt: data.createdAt,
-          ingredients: data.ingredients,
-          steps: data.steps,
-          name: data.name,
-        })
+
+        const recipe: Recipe = {
+          recipeId,
+          name: data.name ?? '',
+          description: data.description ?? '',
+          ingredients: data.ingredients ?? [],
+          steps: data.steps ?? [],
+          tags: {
+            vegan: data.tags?.vegan ?? false,
+            vegetarian: data.tags?.vegetarian ?? false,
+            lactoseFree: data.tags?.lactoseFree ?? false,
+            halal: data.tags?.halal ?? false,
+            soy: data.tags?.soy ?? false,
+            peanuts: data.tags?.peanuts ?? false,
+          },
+          creatorRating: data.creatorRating ?? 0,
+          difficulty: data.difficulty ?? 0,
+        }
+
+        recipeList.append(recipe)
       }
     } catch (error) {
       console.warn(`⚠️ Skipping recipe ${recipeId}:`, error)
