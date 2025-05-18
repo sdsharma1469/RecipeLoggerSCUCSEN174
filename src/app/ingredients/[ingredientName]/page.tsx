@@ -1,17 +1,27 @@
 'use client';
 
+import { auth } from "@/lib/firebase-client"; // Authentication from firebase
 import { fetchIngredientData } from '@/lib/utils/Ingredients/ingredientDataFetch'; // USDA API
 import { fetchIngredientPrice } from '@/lib/utils/Ingredients/spoonacularPriceFetch'; // Spoonacular API
 import { useEffect, useState } from 'react';
 import './ingredients.css';
 
 export default function IngredientPage({ params }: { params: { ingredientName: string } }) {
+  const [username, setUsername] = useState<string>('Guest'); //Makes the default fallback to being a guest
   const [ingredientData, setIngredientData] = useState<any>(null);
   const [priceInfo, setPriceInfo] = useState<any>(null);
 
   const ingredientName = decodeURIComponent(params.ingredientName);
 
-  // function is used to fetch the data from the USDA API
+  //Following code is used to fetch the logged-in user's name so we can make links work
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      setUsername(user.displayName || 'Guest'); //Gets the username or again fallsback to guest
+    }
+  }, []);
+
+  // function is used to fetch the ingredient data
   useEffect(() => {
     async function getUSDAData() {
       try {
@@ -47,7 +57,25 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
   //Before heading into the return statment, I divided it up into 5 sections that are of interest to make up the ingredient page
   return (
     <div>
-      <h1>{ingredientName}</h1>
+      {/* Top Navigation Bar */}
+      <div className="navbar">
+        <div style={{ fontSize: '1.5em', fontWeight: 'bold' }}>Recipe Logger</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em' }}>
+          <a href={`/home/${username}`}>Home</a> |
+          <a href={`/explore/${username}`}>Explore</a> |
+          <a href="/cart">Cart </a> |
+          <img
+            src="https://via.placeholder.com/30"
+            alt="User Profile"
+            style={{ borderRadius: '50%', width: '30px', height: '30px' }}
+          />
+          <span>{username}</span>
+        </div>
+      </div>
+
+      <div className="ingredient-title">
+        <h1> {ingredientName} </h1>
+      </div>
 
       {/* 1. Image */}
       <div id="ingredient-image">
