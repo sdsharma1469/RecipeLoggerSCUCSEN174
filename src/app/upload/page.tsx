@@ -1,49 +1,68 @@
 'use client'
 
 import { useState } from 'react'
-import { generateRecipe } from '../../lib/utils/Recipes/generateRecipe'
+import { uploadRecipeClientSide } from '@/lib/utils/Recipes/Upload'
+import { v4 as uuidv4 } from 'uuid' // Make sure this is installed
+import {app} from '@/lib/firebase-client'
 
 export default function UploadRecipePage() {
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [ingredients, setIngredients] = useState('')
   const [steps, setSteps] = useState('')
   const [status, setStatus] = useState('')
-  const [rating, setRating] = useState(0)
+  const [creatorRating, setCreatorRating] = useState(0)
+  const [difficulty, setDifficulty] = useState(1)
+
+  // Tags
   const [halal, setHalal] = useState(false)
   const [vegan, setVegan] = useState(false)
   const [vegetarian, setVegetarian] = useState(false)
   const [lactoseFree, setLactoseFree] = useState(false)
+  const [soy, setSoy] = useState(false)
+  const [peanuts, setPeanuts] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const recipe = generateRecipe({
+
+    const recipeId = uuidv4()
+    const recipe = {
+      recipeId,
       name,
-      ingredients,
-      steps,
-      halal,
-      vegan,
-      vegetarian,
-      lactoseFree,
-      rating,
-    })
+      description,
+      ingredients: ingredients.split(',').map((item) => {
+        const trimmed = item.trim()
+        return { quantity: 1, name: trimmed } // Adjust quantity parsing if needed
+      }),
+      steps: steps.split('\n').map((step) => step.trim()).filter(Boolean),
+      tags: {
+        halal,
+        vegan,
+        vegetarian,
+        lactoseFree,
+        soy,
+        peanuts,
+      },
+      creatorRating,
+      difficulty,
+    }
 
-    const res = await fetch('/api/recipes/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(recipe),
-    })
+    const success = await uploadRecipeClientSide(recipe)
 
-    const data = await res.json()
-    if (data.success) {
+    if (success) {
       setStatus('✅ Recipe uploaded!')
       setName('')
+      setDescription('')
       setIngredients('')
       setSteps('')
-      setRating(0)
+      setCreatorRating(0)
+      setDifficulty(1)
       setHalal(false)
       setVegan(false)
       setVegetarian(false)
       setLactoseFree(false)
+      setSoy(false)
+      setPeanuts(false)
     } else {
       setStatus('❌ Failed to upload recipe.')
     }
@@ -61,6 +80,11 @@ export default function UploadRecipePage() {
           required
         />
         <textarea
+          placeholder="Short description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+        <textarea
           placeholder="Ingredients (comma-separated)"
           value={ingredients}
           onChange={(e) => setIngredients(e.target.value)}
@@ -72,28 +96,28 @@ export default function UploadRecipePage() {
           onChange={(e) => setSteps(e.target.value)}
           required
         />
-        <label>
-          <input type="checkbox" checked={halal} onChange={() => setHalal(!halal)} />
-          Halal
-        </label>
-        <label>
-          <input type="checkbox" checked={vegan} onChange={() => setVegan(!vegan)} />
-          Vegan
-        </label>
-        <label>
-          <input type="checkbox" checked={vegetarian} onChange={() => setVegetarian(!vegetarian)} />
-          Vegetarian
-        </label>
-        <label>
-          <input type="checkbox" checked={lactoseFree} onChange={() => setLactoseFree(!lactoseFree)} />
-          Lactose Free
-        </label>
+        {/* Tags */}
+        <label><input type="checkbox" checked={halal} onChange={() => setHalal(!halal)} /> Halal</label>
+        <label><input type="checkbox" checked={vegan} onChange={() => setVegan(!vegan)} /> Vegan</label>
+        <label><input type="checkbox" checked={vegetarian} onChange={() => setVegetarian(!vegetarian)} /> Vegetarian</label>
+        <label><input type="checkbox" checked={lactoseFree} onChange={() => setLactoseFree(!lactoseFree)} /> Lactose Free</label>
+        <label><input type="checkbox" checked={soy} onChange={() => setSoy(!soy)} /> Soy</label>
+        <label><input type="checkbox" checked={peanuts} onChange={() => setPeanuts(!peanuts)} /> Peanuts</label>
+        {/* Rating and Difficulty */}
         <input
           type="number"
-          placeholder="Rating (e.g. 5)"
-          value={rating}
-          onChange={(e) => setRating(parseInt(e.target.value, 10))}
+          placeholder="Rating (0–5)"
+          value={creatorRating}
+          onChange={(e) => setCreatorRating(parseInt(e.target.value, 10))}
           min="0"
+          max="5"
+        />
+        <input
+          type="number"
+          placeholder="Difficulty (1–5)"
+          value={difficulty}
+          onChange={(e) => setDifficulty(parseInt(e.target.value, 10))}
+          min="1"
           max="5"
         />
         <button type="submit">Upload</button>

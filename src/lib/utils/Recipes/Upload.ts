@@ -1,12 +1,9 @@
 // lib/utils/Recipes/uploadRecipeClientSide.ts
-import { getFirestore, doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore'
-import { getAuth } from 'firebase/auth'
+import { doc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore'
+import { db, auth } from '@/lib/firebase-client'
 import type { Recipe } from '@/types/Recipe'
 
-
 export async function uploadRecipeClientSide(recipe: Recipe): Promise<boolean> {
-  const db = getFirestore()
-  const auth = getAuth()
   const user = auth.currentUser
 
   if (!user) {
@@ -14,14 +11,14 @@ export async function uploadRecipeClientSide(recipe: Recipe): Promise<boolean> {
     return false
   }
 
+  console.log(`📦 Uploading recipe for user: ${user.uid}`)
+
   try {
-    // 1. Add recipe to Recipes collection
     await setDoc(doc(db, 'Recipes', recipe.recipeId), {
       ...recipe,
       ownerId: user.uid,
     })
 
-    // 2. Add recipe ID to user's UploadedRecipes
     await updateDoc(doc(db, 'Users', user.uid), {
       UploadedRecipes: arrayUnion(recipe.recipeId),
     })

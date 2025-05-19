@@ -24,7 +24,7 @@ const HomePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'saved' | 'my'>('saved');
   const [currentRecipes, setCurrentRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [profileImage, setProfileImage] = useState<string>('https://via.placeholder.com/100');
+  const [profileImage, setProfileImage] = useState<string>('https://placehold.co/100');
 
 
   useEffect(() => {
@@ -32,13 +32,14 @@ const HomePage: React.FC = () => {
       setLoading(true)
       try {
         const uid = await getUserIdByUsername(username)
-  
+        console.log(uid);
         const recipeList =
           activeTab === 'saved'
             ? await getSavedRecipesByUserId(uid)
             : await getCreatedRecipesByUserId(uid)
   
         setCurrentRecipes(recipeList.toArray())
+        console.log(getSavedRecipesByUserId(uid));
       } catch (err) {
         console.error('❌ Failed to load recipes:', err)
         setCurrentRecipes([]) // empty fallback
@@ -74,7 +75,7 @@ const HomePage: React.FC = () => {
           <a href={`/explore/${username}`}>Explore</a> |
           <a href="/cart">Cart </a> |
           <img
-            src="https://via.placeholder.com/30"
+            src="https://placehold.co/100"
             alt="User Profile"
             style={{ borderRadius: '50%', width: '30px', height: '30px' }}
           />
