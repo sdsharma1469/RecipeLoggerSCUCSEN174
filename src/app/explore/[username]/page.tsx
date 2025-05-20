@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation'
-import './explore.css'
-import type { Recipe } from '@/types/Recipe'
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import "./explore.css";
+import type { Recipe } from "@/types/Recipe";
 
 
 const ExplorePage: React.FC = () => {
@@ -97,6 +98,7 @@ const ExplorePage: React.FC = () => {
             <p style={{ padding: '2rem' }}>Loading recipes...</p>
           ) : (
             filteredRecipes.map((recipe) => (
+              <Link href={`/recipeTemplate/${recipe.recipeId}`} key={recipe.recipeId} className="recipe-block-link">
               <div className="recipe-block" key={recipe.recipeId}>
                 <div className="recipe-header">{recipe.name}</div>
                 
@@ -123,6 +125,7 @@ const ExplorePage: React.FC = () => {
                 </div>
               
               </div>
+              </Link>
             ))
           )}
         </div>
