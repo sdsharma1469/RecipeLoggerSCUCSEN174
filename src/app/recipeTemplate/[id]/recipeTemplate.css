@@ -45,3 +45,12 @@ body {
   border-radius: 1em;
   border: 1px solid #ccc; 
 }
+
+.comment-section {
+  width: 70%;
+  background-color: #f7f7d9;
+  padding: 1em;
+  border-radius: 1em;
+  border: 1px solid #ccc; 
+  margin-left: 2em;
+}
