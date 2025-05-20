@@ -70,7 +70,7 @@ const RecipeTemplate: React.FC = () => {
                 <h3 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Ingredients:</h3>
                 <ul className="list-disc ml-6">
                     {recipe.ingredients.map((ingredient, index) => (
-                    <li key={index}><a href={`/ingredients/${ingredient}`} className="text-blue-600 hover:underline">{ingredient}</a></li>
+                    <li key={index}><a href={`/ingredients/${ingredient}?username=${username}`} className="text-blue-600 hover:underline">{ingredient}</a></li>
                     ))}
                 </ul>
                 <h3 style={{ fontSize: "1.2em", fontWeight: "bold"}}>Steps:</h3>
