@@ -85,6 +85,12 @@ const ExplorePage: React.FC = () => {
           <a href={`/home/${username}`}>Home</a> |
           <a href={`/explore/${username}`}>Explore</a> |
           <a href="/cart">Cart </a> |
+          <img
+            src="https://placehold.co/100"
+            alt="User Profile"
+            style={{ borderRadius: '50%', width: '30px', height: '30px' }}
+          />
+          <span>{username}</span>
         </div>
       </div>
 
@@ -98,7 +104,7 @@ const ExplorePage: React.FC = () => {
             <p style={{ padding: '2rem' }}>Loading recipes...</p>
           ) : (
             filteredRecipes.map((recipe) => (
-              <Link href={`/recipeTemplate/${recipe.recipeId}`} key={recipe.recipeId} className="recipe-block-link">
+              <Link href={`/recipeTemplate/${recipe.recipeId}?username=${username}`} key={recipe.recipeId} className="recipe-block-link">
               <div className="recipe-block" key={recipe.recipeId}>
                 <div className="recipe-header">{recipe.name}</div>
                 

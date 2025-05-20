@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from "react";
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import type { Recipe } from '@/types/Recipe';
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
 import { Timestamp } from "firebase-admin/firestore"
@@ -16,7 +16,8 @@ const RecipeTemplate: React.FC = () => {
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
-    
+    const searchParams = useSearchParams(); // I added here a way to get the username from the URL from the explore page!
+    const username = searchParams.get('username') || 'Guest'; // I added here a way to get the username from the URL from the explore page!
     useEffect(() => {
         const fetchRecipe = async () => {
             try {
@@ -46,7 +47,15 @@ const RecipeTemplate: React.FC = () => {
         <div className="navbar">
             <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>View Recipe</div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
-            <a href="home/shaunaksharma">Home</a> | <a href="/explore">Explore</a> | <a href="/profile">Profile</a>
+                <a href={`/home/${username}`}>Home</a> |
+                <a href={`/explore/${username}`}>Explore</a> |
+                <a href="/cart">Cart </a> |
+                <img
+                src="https://placehold.co/100"
+                alt="User Profile"
+                style={{ borderRadius: '50%', width: '30px', height: '30px' }}
+                />
+                <span>{username}</span>
             </div>
         </div>
         <div className="container">
