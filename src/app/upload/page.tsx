@@ -159,7 +159,7 @@ export default function UploadRecipePage() {
 
           {/* Description */}
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>Description (comma-separated)</label>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -192,7 +192,7 @@ export default function UploadRecipePage() {
 
           {/* Steps */}
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>Steps (one per line)</label>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>Steps (comma-separated)</label>
             <textarea
               value={steps}
               onChange={(e) => setSteps(e.target.value)}
