@@ -3,7 +3,8 @@ import { useState } from "react";
 import React from "react";
 import { uploadRecipeClientSide } from "@/lib/utils/Recipes/Upload";
 import { v4 as uuidv4 } from "uuid";
-import { app } from "@/lib/firebase-client";
+import { Timestamp } from 'firebase/firestore'; // from Firebase *client* SDK
+
 import "./home.css";
 
 // Firebase Auth imports
@@ -62,6 +63,8 @@ export default function UploadRecipePage() {
     const recipeId = uuidv4();
     const recipe = {
       recipeId,
+      author: username,
+      createdAt: Timestamp.now(),
       name,
       description,
       ingredients: ingredients
@@ -74,6 +77,7 @@ export default function UploadRecipePage() {
         .split("\n")
         .map((step) => step.trim())
         .filter(Boolean),
+      comments: [],
       tags: {
         halal,
         vegan,
@@ -82,9 +86,12 @@ export default function UploadRecipePage() {
         soy,
         peanuts,
       },
-      creatorRating,
-      difficulty,
+      authorDiff: creatorRating,
+      userDiff: difficulty,
+      cost: 0,
+      rating: creatorRating,
     };
+    
 
     const success = await uploadRecipeClientSide(recipe);
 

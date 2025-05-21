@@ -1,5 +1,9 @@
+import { Timestamp } from 'firebase/firestore'; // from firebase *client* SDK
+
 export type Recipe = {
   recipeId: string;
+  author: string;
+  createdAt: Timestamp | Date | string; // support all likely cases
   name: string;
   description?: string;
   ingredients: Array<{
@@ -7,6 +11,7 @@ export type Recipe = {
     name: string;
   }>;
   steps: string[];
+  comments: string[];
   tags: {
     vegan: boolean;
     vegetarian: boolean;
@@ -15,6 +20,8 @@ export type Recipe = {
     soy: boolean;
     peanuts: boolean;
   };
-  creatorRating: number;
-  difficulty: number;
+  authorDiff: number;
+  rating: number;
+  userDiff: number;
+  cost: number;
 };
