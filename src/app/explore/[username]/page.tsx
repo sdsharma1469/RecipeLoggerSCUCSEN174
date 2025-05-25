@@ -11,7 +11,7 @@ const ExplorePage: React.FC = () => {
   const [filterStates, setFilterStates] = useState<Record<string, string>>({});
   const [recipes, setRecipes] = useState<Recipe[]>([]);
 
-  // ✅ Get all filters dynamically from tags in the recipes
+  // Creates an object of filters to dynamically locate for each item in the tag map in Recipe to dynamically add as a filters list
   const filters = useMemo(() => {
     const tagKeys = new Set<string>();
     recipes.forEach(recipe => {
@@ -25,7 +25,7 @@ const ExplorePage: React.FC = () => {
   const [filterSearchQuery, setFilterSearchQuery] = useState('');
   const [filterSearchInput, setFilterSearchInput] = useState('');
 
-  // Toggle filter state: none -> whitelisted -> blacklisted
+  // Toggles our filter states from: none -> whitelisted -> blacklisted
   const toggleFilter = (name: string) => {
     setFilterStates(prev => {
       const current = prev[name] || 'none';
@@ -46,7 +46,7 @@ const ExplorePage: React.FC = () => {
       .replace(/^./, str => str.toUpperCase()); // capitalize first letter
   };
 
-  // Fetch recipes from backend
+  // Fetch our recipes from backend
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
@@ -72,12 +72,12 @@ const ExplorePage: React.FC = () => {
   // Filter logic for whitelist, blacklist, and search
   const filteredRecipes = recipes.filter((recipe) => {
     // This line ensures that we filter by name search
-    const matchsSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Skips this particular recipe if it doesn't match the search query
-    if (!matchsSearch) return false;
+    if (!matchesSearch) return false;
 
-    // The following applies the tag filter states
+    // The following applies to establishing the filter tag states and setting the tag name too from recipes and their own tags
     return filters.every((filterKey) => {
       const state = filterStates[filterKey] || 'none';
       const tagValue = recipe.tags?.[filterKey as keyof Recipe['tags']];
@@ -87,6 +87,13 @@ const ExplorePage: React.FC = () => {
       return true;
     });
   });
+
+  // Made another function here to calculate the difficulty rating based on the userDiff and the authorDiff depending on which is available or if both are
+  const getDifficultyRating = (recipe: Recipe): number | null => {
+    if (typeof recipe.userDiff === 'number') return recipe.userDiff; // NOTE: this number value is returned only if it exists! I am already assuming this value is the average of ALL user ratings!
+    if (typeof recipe.authorDiff === 'number') return recipe.authorDiff; // This line will ONLY execute IF there is NO userDiff. Author diff takes priority
+    return null; // If neither author or user Diff are initialized, the rating is just gonna be null.
+  };
 
   return (
     <div>
@@ -120,41 +127,41 @@ const ExplorePage: React.FC = () => {
           {loading ? (
             <p style={{ padding: '2rem' }}>Loading recipes...</p>
           ) : (
-            filteredRecipes.map((recipe) => (
-              <Link
-                href={`/recipeTemplate/${recipe.recipeId}?username=${username}`}
-                key={recipe.recipeId}
-                className="recipe-block-link"
-              >
-                <div className="recipe-block">
-                  <div className="recipe-header">{recipe.name}</div>
+            filteredRecipes.map((recipe) => {
+              const difficulty = getDifficultyRating(recipe); {/* Using the getDifficultyRating function, we can use our difficulty in the page itself */}
+              return (
+                <Link
+                  href={`/recipeTemplate/${recipe.recipeId}?username=${username}`}
+                  key={recipe.recipeId}
+                  className="recipe-block-link"
+                >
+                  <div className="recipe-block">
+                    <div className="recipe-header">{recipe.name}</div>
 
-                  <img
-                    src="https://via.placeholder.com/600x200"
-                    alt={recipe.name}
-                    className="recipe-image"
-                  />
+                    <img src="https://via.placeholder.com/600x200" alt={recipe.name} className="recipe-image"/>
 
-                  <div className="recipe-description">
-                    {recipe.steps[0]?.slice(0, 100) || 'No description available...'}
-                  </div>
-
-                  <div className="recipe-tags">
-                    {Object.entries(recipe.tags).map(([key, value]) =>
-                      value ? <span key={key}>{formatTagName(key)}</span> : null
-                    )}
-                  </div>
-
-                  <div className="recipe-footer">
-                    <div className="ratings">
-                      <div>Rating: {recipe.rating}/5</div>
-                      <div>Ingredients: {recipe.ingredients.length}</div>
+                    <div className="recipe-description">
+                      {recipe.steps[0]?.slice(0, 100) || 'No description available...'}
                     </div>
-                    <div className="price">Free</div>
+
+                    <div className="recipe-tags">
+                      {Object.entries(recipe.tags).map(([key, value]) =>
+                        value ? <span key={key}>{formatTagName(key)}</span> : null
+                      )}
+                    </div>
+
+                    <div className="recipe-footer">
+                      <div className="ratings">
+                        <div>Rating: {recipe.rating}/5</div>
+                        <div>Ingredients: {recipe.ingredients.length}</div>
+                        {difficulty !== null && <div>Difficulty: {difficulty}/5</div>}
+                      </div>
+                      <div className="price">Free</div>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))
+                </Link>
+              );
+            })
           )}
         </div>
 
