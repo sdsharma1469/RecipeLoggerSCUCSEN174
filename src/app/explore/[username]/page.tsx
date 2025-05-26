@@ -141,7 +141,7 @@ const ExplorePage: React.FC = () => {
                     <img src="https://via.placeholder.com/600x200" alt={recipe.name} className="recipe-image"/>
 
                     <div className="recipe-description">
-                      {recipe.steps[0]?.slice(0, 100) || 'No description available...'}
+                      {recipe.description ? recipe.description : 'No description available...'}
                     </div>
 
                     <div className="recipe-tags">
