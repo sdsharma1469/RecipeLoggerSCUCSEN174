@@ -14,8 +14,6 @@ const RecipeTemplate: React.FC = () => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  //const searchParams = useSearchParams();
-  //const username = searchParams.get('username') || 'Guest';
   const [rating, setRating] = useState<number | null>(null);
   const [username, setUsername] = useState("");
 
