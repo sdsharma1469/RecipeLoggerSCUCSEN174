@@ -3,10 +3,8 @@ import { useState } from "react";
 import React from "react";
 import { uploadRecipeClientSide } from "@/lib/utils/Recipes/Upload";
 import { v4 as uuidv4 } from "uuid";
-import { Timestamp } from 'firebase/firestore'; // from Firebase *client* SDK
-
+import { Timestamp } from "firebase/firestore"; // from Firebase client SDK
 import "./home.css";
-
 // Firebase Auth imports
 import { auth } from "@/lib/firebase-client";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -30,7 +28,16 @@ export default function UploadRecipePage() {
   const [soy, setSoy] = useState(false);
   const [peanuts, setPeanuts] = useState(false);
 
-  //test
+  // Tools/Appliances
+  const [knife, setKnife] = useState(false);
+  const [oven, setOven] = useState(false);
+  const [airFryer, setAirFryer] = useState(false);
+  const [stainlessSteelPan, setStainlessSteelPan] = useState(false);
+  const [wok, setWok] = useState(false);
+  const [smallPot, setSmallPot] = useState(false);
+  const [mediumPot, setMediumPot] = useState(false);
+  const [largePot, setLargePot] = useState(false);
+
   // 🔐 User Authentication & Username Detection
   const [username, setUsername] = useState("");
 
@@ -53,13 +60,11 @@ export default function UploadRecipePage() {
         setUsername("Guest");
       }
     });
-
     return () => unsubscribe(); // Clean up listener
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const recipeId = uuidv4();
     const recipe = {
       recipeId,
@@ -68,11 +73,10 @@ export default function UploadRecipePage() {
       name,
       description,
       ingredients: ingredients
-        .split(",")
-        .map((item) => {
-          const trimmed = item.trim();
-          return { quantity: 1, name: trimmed };
-        }),
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((name) => ({ quantity: 1, name })),
       steps: steps
         .split("\n")
         .map((step) => step.trim())
@@ -86,15 +90,21 @@ export default function UploadRecipePage() {
         soy,
         peanuts,
       },
-      authorDiff: creatorRating,
-      userDiff: difficulty,
-      cost: 0,
+      tools: {
+        knife,
+        oven,
+        airFryer,
+        stainlessSteelPan,
+        wok,
+        smallPot,
+        mediumPot,
+        largePot,
+      },
       rating: [creatorRating],
+      difficulty,
+      cost: 0,
     };
-    
-
     const success = await uploadRecipeClientSide(recipe);
-
     if (success) {
       setStatus("✅ Recipe uploaded!");
       resetForm();
@@ -116,7 +126,18 @@ export default function UploadRecipePage() {
     setLactoseFree(false);
     setSoy(false);
     setPeanuts(false);
+
+    setKnife(false);
+    setOven(false);
+    setAirFryer(false);
+    setStainlessSteelPan(false);
+    setWok(false);
+    setSmallPot(false);
+    setMediumPot(false);
+    setLargePot(false);
   };
+
+  
 
   return (
     <div>
@@ -126,16 +147,16 @@ export default function UploadRecipePage() {
         <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
           <a href={username ? `/home/${username}` : "/home"}>Home</a> |
           <a href={username ? `/explore/${username}` : "/explore"}>Explore</a> |
-          <a href="/cart">Cart</a> |
+          <a href={username ? `/shoppingList/${username}` : "/shoppingList"}>Cart</a> |
           <img
-            src="https://placehold.co/100 "
+            src="https://placehold.co/100  "
             alt="User Profile"
             style={{ borderRadius: "50%", width: "30px", height: "30px" }}
           />
           <span>{username}</span>
         </div>
       </div>
-      
+
       {/* Main Upload Form */}
       <div style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
         <h1>Upload a Recipe</h1>
@@ -175,7 +196,7 @@ export default function UploadRecipePage() {
 
           {/* Ingredients */}
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>Ingredients (comma-separated)</label>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>Ingredients (one per line. make sure to put in the correct measurements before the ingredient.)</label>
             <textarea
               value={ingredients}
               onChange={(e) => setIngredients(e.target.value)}
@@ -192,7 +213,7 @@ export default function UploadRecipePage() {
 
           {/* Steps */}
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>Steps (comma-separated)</label>
+            <label style={{ display: "block", marginBottom: "0.5rem" }}>Steps (one per line)</label>
             <textarea
               value={steps}
               onChange={(e) => setSteps(e.target.value)}
@@ -232,16 +253,47 @@ export default function UploadRecipePage() {
             </div>
           </div>
 
+          {/* Tools/Appliances Tags */}
+          <div>
+            <h3 style={{ marginBottom: "0.5rem" }}>Tools / Appliances</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={knife} onChange={() => setKnife(!knife)} /> Knife
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={oven} onChange={() => setOven(!oven)} /> Oven
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={airFryer} onChange={() => setAirFryer(!airFryer)} /> Air Fryer
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={stainlessSteelPan} onChange={() => setStainlessSteelPan(!stainlessSteelPan)} /> Stainless Steel Pan
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={wok} onChange={() => setWok(!wok)} /> Wok
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={smallPot} onChange={() => setSmallPot(!smallPot)} /> Small Pot
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={mediumPot} onChange={() => setMediumPot(!mediumPot)} /> Medium Pot
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={largePot} onChange={() => setLargePot(!largePot)} /> Large Pot
+              </label>
+            </div>
+          </div>
+
           {/* Rating and Difficulty */}
           <div style={{ display: "flex", gap: "1rem" }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: "block", marginBottom: "0.5rem" }}>Your Rating (0–5)</label>
               <input
                 type="number"
-                value={creatorRating}
-                onChange={(e) => setCreatorRating(parseInt(e.target.value))}
                 min="0"
                 max="5"
+                value={creatorRating}
+                onChange={(e) => setCreatorRating(parseInt(e.target.value))}
                 style={{
                   width: "100%",
                   padding: "0.5rem",
@@ -254,10 +306,10 @@ export default function UploadRecipePage() {
               <label style={{ display: "block", marginBottom: "0.5rem" }}>Difficulty (1–5)</label>
               <input
                 type="number"
-                value={difficulty}
-                onChange={(e) => setDifficulty(parseInt(e.target.value))}
                 min="1"
                 max="5"
+                value={difficulty}
+                onChange={(e) => setDifficulty(parseInt(e.target.value))}
                 style={{
                   width: "100%",
                   padding: "0.5rem",
