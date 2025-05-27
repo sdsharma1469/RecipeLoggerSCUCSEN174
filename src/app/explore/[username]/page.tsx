@@ -20,6 +20,15 @@ const ExplorePage: React.FC = () => {
     return Array.from(tagKeys);
   }, [recipes]);
 
+  // Creates an object of tools to dynamically generate a tools list
+  const tools = useMemo(() => {
+    const toolKeys = new Set<string>();
+    recipes.forEach(recipe => {
+      Object.keys(recipe.tools || {}).forEach(tool => toolKeys.add(tool));
+    });
+    return Array.from(toolKeys);
+  }, [recipes]);
+
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSearchQuery, setFilterSearchQuery] = useState('');
@@ -69,21 +78,29 @@ const ExplorePage: React.FC = () => {
       )
     : filters;
 
+  const visibleTools = filterSearchQuery
+    ? tools.filter(tool =>
+        tool.toLowerCase().includes(filterSearchQuery.toLowerCase())
+      )
+    : tools;
+
   // Filter logic for whitelist, blacklist, and search
   const filteredRecipes = recipes.filter((recipe) => {
     // This line ensures that we filter by name search
-    const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) || recipe.author.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Skips this particular recipe if it doesn't match the search query
     if (!matchesSearch) return false;
 
     // The following applies to establishing the filter tag states and setting the tag name too from recipes and their own tags
-    return filters.every((filterKey) => {
-      const state = filterStates[filterKey] || 'none';
-      const tagValue = recipe.tags?.[filterKey as keyof Recipe['tags']];
+    return [...filters, ...tools].every((key) => {
+      const state = filterStates[key] || 'none';
+      const tagValue = recipe.tags?.[key as keyof Recipe['tags']];
+      const toolValue = recipe.tools?.[key as keyof Recipe['tools']];
+      const value = tagValue ?? toolValue;
 
-      if (state === 'whitelisted') return tagValue === true;
-      if (state === 'blacklisted') return tagValue === false;
+      if (state === 'whitelisted') return value === true;
+      if (state === 'blacklisted') return value === false;
       return true;
     });
   });
@@ -96,7 +113,7 @@ const ExplorePage: React.FC = () => {
   };
 
   return (
-    <div>
+    <div id="document-wrapper">
       <div className="navbar">
         <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>Explore Recipes</div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
@@ -137,6 +154,8 @@ const ExplorePage: React.FC = () => {
                 >
                   <div className="recipe-block">
                     <div className="recipe-header">{recipe.name}</div>
+
+                    <div className="recipe-author">By: {recipe.author}</div>
 
                     <img src="https://via.placeholder.com/600x200" alt={recipe.name} className="recipe-image"/>
 
@@ -189,6 +208,19 @@ const ExplorePage: React.FC = () => {
                 className={filterStates[filter] || ''}
               >
                 {formatTagName(filter)}
+              </button>
+            ))}
+          </div>
+
+          <div className="filter-title" style={{marginTop: '0.75em'}}>Tools</div>
+          <div className="filter-list">
+            {visibleTools.map((tool) => (
+              <button
+                key={tool}
+                onClick={() => toggleFilter(tool)}
+                className={filterStates[tool] || ''}
+              >
+                {formatTagName(tool)}
               </button>
             ))}
           </div>
