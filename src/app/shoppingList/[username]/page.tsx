@@ -97,7 +97,7 @@ export default function ShoppingListPage() {
             Explore
           </a>{" "}
           |{" "}
-          <a href="/cart" style={{ textDecoration: "none", color: "#000000" }}>
+          <a href={username ? `/shoppingList/${username}` : "/pages/shoppingList"} style={{ textDecoration: "none", color: "#000000" }}>
             Cart
           </a>{" "}
           |{" "}
