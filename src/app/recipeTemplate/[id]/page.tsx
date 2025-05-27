@@ -28,7 +28,7 @@ const RecipeTemplate: React.FC = () => {
     };
     fetchRecipe();
   }, []);
-
+  
   if (loading) return <p>Loading recipe...</p>;
   if (error) return <p>Error: {error}</p>;
   if (!recipe) return <p>No recipe found.</p>;
@@ -40,7 +40,7 @@ const RecipeTemplate: React.FC = () => {
   } else if (typeof recipe.createdAt === 'string' || recipe.createdAt instanceof Date) {
     createdAtDate = new Date(recipe.createdAt);
   }
-
+  
   const safeRating = typeof recipe.rating === 'number' && recipe.rating >= 0 ? recipe.rating : 0;
   const fullStars = Math.floor(safeRating);
   const halfStar = safeRating % 1 >= 0.25 && safeRating % 1 <= 0.75;
@@ -117,7 +117,7 @@ const RecipeTemplate: React.FC = () => {
 
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Average Price</h2>
           <h3 style={{ fontSize: "1.1em" }}>${recipe.cost}</h3>
-
+    
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tags</h3>
           {recipe.tags.halal && <p style={{ fontSize: "1.1em" }}>Halal</p>}
           {recipe.tags.lactoseFree && <p style={{ fontSize: "1.1em" }}>Lactose Free</p>}
