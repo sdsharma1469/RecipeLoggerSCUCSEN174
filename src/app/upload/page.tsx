@@ -18,7 +18,7 @@ export default function UploadRecipePage() {
   const [steps, setSteps] = useState("");
   const [status, setStatus] = useState("");
   const [creatorRating, setCreatorRating] = useState(0);
-  const [difficulty, setDifficulty] = useState(1);
+  const [authorDiff, setDifficulty] = useState(1);
 
   // Tags
   const [halal, setHalal] = useState(false);
@@ -101,7 +101,7 @@ export default function UploadRecipePage() {
         largePot,
       },
       rating: [creatorRating],
-      difficulty,
+      authorDiff,
       cost: 0,
     };
     const success = await uploadRecipeClientSide(recipe);
@@ -308,7 +308,7 @@ export default function UploadRecipePage() {
                 type="number"
                 min="1"
                 max="5"
-                value={difficulty}
+                value={authorDiff}
                 onChange={(e) => setDifficulty(parseInt(e.target.value))}
                 style={{
                   width: "100%",

@@ -17,6 +17,7 @@ const RecipeTemplate: React.FC = () => {
   const [rating, setRating] = useState<number | null>(null);
   const [username, setUsername] = useState("");
 
+  // Fetch recipe from id and calculate rating
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
@@ -39,7 +40,7 @@ const RecipeTemplate: React.FC = () => {
     fetchRecipe();
   }, [id]);
 
-  
+  // Add to rating array in recipe
   const [showStars, setShowStars] = useState(false);
   const handleAddRating = async (newrating: number) => {
     const user = auth.currentUser
