@@ -102,7 +102,7 @@ const ExplorePage: React.FC = () => {
         <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
           <a href={`/home/${username}`}>Home</a> |
           <a href={`/explore/${username}`}>Explore</a> |
-          <a href="/cart">Cart </a> |
+          <a href={username ? `/shoppingList/${username}` : "/shoppingList"}>Cart</a> |
           <img
             src="https://placehold.co/100"
             alt="User Profile"
