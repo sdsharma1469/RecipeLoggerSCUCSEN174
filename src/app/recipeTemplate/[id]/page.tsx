@@ -4,8 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from 'next/navigation';
 import type { Recipe } from '@/types/Recipe';
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
-import { Timestamp, doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db, auth } from '@/lib/firebase-client'
+import { Timestamp, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { db, auth } from "@/lib/firebase-client"; // Firestore instance
 import './recipeTemplate.css';
 
 const RecipeTemplate: React.FC = () => {
@@ -13,10 +14,10 @@ const RecipeTemplate: React.FC = () => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
-  const username = searchParams.get('username') || 'Guest';
-  const user = auth.currentUser;
+  //const searchParams = useSearchParams();
+  //const username = searchParams.get('username') || 'Guest';
   const [rating, setRating] = useState<number | null>(null);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -39,14 +40,20 @@ const RecipeTemplate: React.FC = () => {
     };
     fetchRecipe();
   }, []);
+
   
   const [showStars, setShowStars] = useState(false);
-  const handleAddRating = async (rating: number) => {
+  const handleAddRating = async (newrating: number) => {
+    const user = auth.currentUser
+    if (!user) {
+      console.warn('🚫 User not logged in');
+      return false;
+    }
     try {
       await updateDoc(doc(db, 'Recipes', id), {
-        rating: arrayUnion(rating)
+        rating: arrayUnion(newrating)
       });
-      alert(`You rated this item ${rating} star${rating > 1 ? 's' : ''}.`);
+      alert(`You rated this item ${newrating} star${newrating > 1 ? 's' : ''}.`);
       setShowStars(false);
     } catch (error) {
       console.error('Error adding rating:', error);
@@ -65,6 +72,7 @@ const RecipeTemplate: React.FC = () => {
   } else if (typeof recipe.createdAt === 'string' || recipe.createdAt instanceof Date) {
     createdAtDate = new Date(recipe.createdAt);
   }
+
   console.log(rating);
   const safeRating = typeof rating === 'number' && rating !== null && rating >= 0 ? rating : 0;
   const fullStars = Math.floor(safeRating);
@@ -76,6 +84,7 @@ const RecipeTemplate: React.FC = () => {
     ...Array(emptyStars).fill('empty')
   ];
   console.log(stars);
+
   return (
     <div>
       <div className="navbar">

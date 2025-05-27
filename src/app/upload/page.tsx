@@ -89,7 +89,7 @@ export default function UploadRecipePage() {
       authorDiff: creatorRating,
       userDiff: difficulty,
       cost: 0,
-      rating: creatorRating,
+      rating: [creatorRating],
     };
     
 
