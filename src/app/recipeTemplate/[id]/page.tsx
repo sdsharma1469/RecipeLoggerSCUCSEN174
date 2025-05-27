@@ -48,9 +48,14 @@ const RecipeTemplate: React.FC = () => {
       return false;
     }
     try {
-      await updateDoc(doc(db, 'Recipes', id), {
-        rating: arrayUnion(newrating)
-      });
+      const docSnap = await getDoc(doc(db, 'Recipes', id));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const existingRatings = data.rating || [];
+        await updateDoc(doc(db, 'Recipes', id), {
+          rating: [...existingRatings, newrating],
+        });
+      }
       alert(`You rated this item ${newrating} star${newrating > 1 ? 's' : ''}.`);
       setShowStars(false);
     } catch (error) {
