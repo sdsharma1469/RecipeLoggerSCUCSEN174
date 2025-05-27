@@ -1,12 +1,6 @@
 /* ingredients.css */
 
-body {
-  background: linear-gradient(to bottom right, #e6f4e6, #fffde6);
-  font-family: Arial, sans-serif;
-  color: #333;
-  padding: 20px;
-}
-
+/* Top navbar */
 .navbar {
   background-color: #cce5cc;
   padding: 1em 2em;
@@ -20,39 +14,4 @@ body {
   border-bottom: 2px solid #ccc; /* Separator under navbar */
 }
 
-.ingredient-title {
-  font-size: 48px;
-  font-weight: bold;
-  color: #4a4a4a;
-  margin-bottom: 20px;
-}
-
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start; /* Align everything to the left */
-  padding-left: 50px; /* Shift content left */
-  max-width: 800px;
-}
-
-#ingredient-image img {
-  max-width: 300px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-}
-
-#ingredient-calories, #ingredient-price, #ingredient-nutrients, #ingredient-buy {
-  font-size: 22px;
-  margin-bottom: 20px;
-}
-
-.amazon-link {
-  font-size: 20px;
-  color: #0073e6;
-  text-decoration: none;
-  font-weight: bold;
-}
-
-.amazon-link:hover {
-  text-decoration: underline;
-}
+/* Moved a ton of the styling in here over to ingredient page.tsx */
