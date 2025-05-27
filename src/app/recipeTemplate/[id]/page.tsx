@@ -141,8 +141,8 @@ const RecipeTemplate: React.FC = () => {
       <div className="navbar">
         <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>View Recipe</div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
-          <a href={`/home/${username}`}>Home</a> |
-          <a href={`/explore/${username}`}>Explore</a> |
+        <a href={username ? `/home/${username}` : "/home"}>Home</a> |
+          <a href={username ? `/explore/${username}` : "/explore"}>Explore</a> |
           <a href={username ? `/shoppingList/${username}` : "/shoppingList"}>Cart</a> |
           <img
             src="https://placehold.co/100   "
