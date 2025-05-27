@@ -21,7 +21,7 @@ export type Recipe = {
     peanuts: boolean;
   };
   authorDiff: number;
-  rating: number;
+  rating: number[];
   userDiff: number;
   cost: number;
 };

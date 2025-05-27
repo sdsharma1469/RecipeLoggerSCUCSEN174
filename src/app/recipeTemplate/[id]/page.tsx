@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from 'next/navigation';
 import type { Recipe } from '@/types/Recipe';
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp, doc, updateDoc, arrayUnion } from "firebase/firestore";
+import { db, auth } from '@/lib/firebase-client'
 import './recipeTemplate.css';
 
 const RecipeTemplate: React.FC = () => {
@@ -14,12 +15,22 @@ const RecipeTemplate: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
   const username = searchParams.get('username') || 'Guest';
+  const user = auth.currentUser;
+  const [average, setAverage] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         const fetchedRecipe = await fetchRecipeById(id);
         setRecipe(fetchedRecipe);
+        const ratings: number[] = fettings || [];
+          if (ratings.length > 0) {
+            const sum = ratings.reduce((a, b) => a + b, 0);
+            const avg = sum / ratings.length;
+            setAverage(Number(avg.toFixed(2)));
+          } else {
+            setAverage(null); // no ratings yet
+          }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -28,7 +39,21 @@ const RecipeTemplate: React.FC = () => {
     };
     fetchRecipe();
   }, []);
-  
+
+  const [showStars, setShowStars] = useState(false);
+  const handleAddRating = async (rating: number) => {
+    try {
+      await updateDoc(doc(db, 'Recipes', id), {
+        rating: arrayUnion(rating)
+      });
+      alert(`You rated this item ${rating} star${rating > 1 ? 's' : ''}.`);
+      setShowStars(false);
+    } catch (error) {
+      console.error('Error adding rating:', error);
+      alert('Failed to submit rating.');
+    }
+  };
+
   if (loading) return <p>Loading recipe...</p>;
   if (error) return <p>Error: {error}</p>;
   if (!recipe) return <p>No recipe found.</p>;
@@ -111,13 +136,22 @@ const RecipeTemplate: React.FC = () => {
             ))}
           </div>
 
+          <button onClick={() => setShowStars((prev) => !prev)} className="bg-blue-500 text-white px-4 py-2 rounded">Add Rating</button>
+          {showStars && (
+            <div className="flex items-start flex-col">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button key={star} style={{ fontSize: "1.55em" }} onClick={() => handleAddRating(star)} className="flex text-yellow-500 hover:scale-110">{'★'.repeat(star)}{'☆'.repeat(5 - star)}</button>
+              ))}
+            </div>
+          )}
+
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Difficulty</h2>
           <h3 style={{ fontSize: "1.1em" }}>From author: {recipe.authorDiff}/10</h3>
           <h3 style={{ fontSize: "1.1em" }}>From users: {recipe.userDiff}/10</h3>
 
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Average Price</h2>
           <h3 style={{ fontSize: "1.1em" }}>${recipe.cost}</h3>
-    
+      
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tags</h3>
           {recipe.tags.halal && <p style={{ fontSize: "1.1em" }}>Halal</p>}
           {recipe.tags.lactoseFree && <p style={{ fontSize: "1.1em" }}>Lactose Free</p>}
