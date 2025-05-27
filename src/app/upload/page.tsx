@@ -100,7 +100,7 @@ export default function UploadRecipePage() {
         mediumPot,
         largePot,
       },
-      rating: creatorRating,
+      rating: [creatorRating],
       difficulty,
       cost: 0,
     };

@@ -33,7 +33,7 @@ export type Recipe = {
     largePot: boolean;
 };
   authorDiff: number;
-  rating: number;
+  rating: number[];
   userDiff: number;
   cost: number;
 };

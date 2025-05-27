@@ -4,7 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from 'next/navigation';
 import type { Recipe } from '@/types/Recipe';
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
-import { Timestamp } from "firebase/firestore";
+import { Timestamp, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { db, auth } from "@/lib/firebase-client"; // Firestore instance
 import './recipeTemplate.css';
 
 // Firebase imports
@@ -17,14 +19,22 @@ const RecipeTemplate: React.FC = () => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const searchParams = useSearchParams();
-  const username = searchParams.get('username') || 'Guest';
+  const [rating, setRating] = useState<number | null>(null);
+  const [username, setUsername] = useState("");
 
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         const fetchedRecipe = await fetchRecipeById(id);
         setRecipe(fetchedRecipe);
+        const ratings: number[] = fetchedRecipe.rating || [];
+          if (ratings.length > 0) {
+            const sum = ratings.reduce((a, b) => a + b, 0);
+            const avg = sum / ratings.length;
+            setRating(Number(avg.toFixed(2)));
+          } else {
+            setRating(null);
+          }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -33,6 +43,31 @@ const RecipeTemplate: React.FC = () => {
     };
     fetchRecipe();
   }, [id]);
+
+  
+  const [showStars, setShowStars] = useState(false);
+  const handleAddRating = async (newrating: number) => {
+    const user = auth.currentUser
+    if (!user) {
+      console.warn('🚫 User not logged in');
+      return false;
+    }
+    try {
+      const docSnap = await getDoc(doc(db, 'Recipes', id));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const existingRatings = data.rating || [];
+        await updateDoc(doc(db, 'Recipes', id), {
+          rating: [...existingRatings, newrating],
+        });
+      }
+      alert(`You rated this item ${newrating} star${newrating > 1 ? 's' : ''}.`);
+      setShowStars(false);
+    } catch (error) {
+      console.error('Error adding rating:', error);
+      alert('Failed to submit rating.');
+    }
+  };
 
   if (loading) return <p>Loading recipe...</p>;
   if (error) return <p>Error: {error}</p>;
@@ -47,7 +82,7 @@ const RecipeTemplate: React.FC = () => {
   }
 
   // Star rating logic
-  const safeRating = typeof recipe.rating === 'number' && recipe.rating >= 0 ? recipe.rating : 0;
+  const safeRating = typeof rating === 'number' && rating !== null && rating >= 0 ? rating : 0;
   const fullStars = Math.floor(safeRating);
   const halfStar = safeRating % 1 >= 0.25 && safeRating % 1 <= 0.75;
   const emptyStars = Math.max(0, 5 - fullStars - (halfStar ? 1 : 0));
@@ -56,6 +91,7 @@ const RecipeTemplate: React.FC = () => {
     ...(halfStar ? ['half'] : []),
     ...Array(emptyStars).fill('empty')
   ];
+  console.log(stars);
 
   // Add to Shopping List handler
   const handleAddToCart = async () => {
@@ -165,13 +201,22 @@ const RecipeTemplate: React.FC = () => {
             ))}
           </div>
 
+          <button onClick={() => setShowStars((prev) => !prev)} className="bg-blue-500 text-white px-4 py-2 rounded">Add Rating</button>
+          {showStars && (
+            <div className="flex items-start flex-col">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button key={star} style={{ fontSize: "1.55em" }} onClick={() => handleAddRating(star)} className="flex text-yellow-500 hover:scale-110">{'★'.repeat(star)}{'☆'.repeat(5 - star)}</button>
+              ))}
+            </div>
+          )}
+
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Difficulty</h2>
           <h3 style={{ fontSize: "1.1em" }}>From author: {recipe.authorDiff}/10</h3>
           <h3 style={{ fontSize: "1.1em" }}>From users: {recipe.userDiff}/10</h3>
 
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Average Price</h2>
           <h3 style={{ fontSize: "1.1em" }}>${recipe.cost}</h3>
-
+      
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tags</h3>
           {recipe.tags.halal && <p style={{ fontSize: "1.1em" }}>Halal</p>}
           {recipe.tags.lactoseFree && <p style={{ fontSize: "1.1em" }}>Lactose Free</p>}
