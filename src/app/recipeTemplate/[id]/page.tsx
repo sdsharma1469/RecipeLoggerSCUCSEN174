@@ -16,20 +16,20 @@ const RecipeTemplate: React.FC = () => {
   const searchParams = useSearchParams();
   const username = searchParams.get('username') || 'Guest';
   const user = auth.currentUser;
-  const [average, setAverage] = useState<number | null>(null);
+  const [rating, setRating] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         const fetchedRecipe = await fetchRecipeById(id);
         setRecipe(fetchedRecipe);
-        const ratings: number[] = fettings || [];
+        const ratings: number[] = fetchedRecipe.rating || [];
           if (ratings.length > 0) {
             const sum = ratings.reduce((a, b) => a + b, 0);
             const avg = sum / ratings.length;
-            setAverage(Number(avg.toFixed(2)));
+            setRating(Number(avg.toFixed(2)));
           } else {
-            setAverage(null); // no ratings yet
+            setRating(null);
           }
       } catch (err: any) {
         setError(err.message);
@@ -39,7 +39,7 @@ const RecipeTemplate: React.FC = () => {
     };
     fetchRecipe();
   }, []);
-
+  
   const [showStars, setShowStars] = useState(false);
   const handleAddRating = async (rating: number) => {
     try {
@@ -65,8 +65,8 @@ const RecipeTemplate: React.FC = () => {
   } else if (typeof recipe.createdAt === 'string' || recipe.createdAt instanceof Date) {
     createdAtDate = new Date(recipe.createdAt);
   }
-  
-  const safeRating = typeof recipe.rating === 'number' && recipe.rating >= 0 ? recipe.rating : 0;
+  console.log(rating);
+  const safeRating = typeof rating === 'number' && rating !== null && rating >= 0 ? rating : 0;
   const fullStars = Math.floor(safeRating);
   const halfStar = safeRating % 1 >= 0.25 && safeRating % 1 <= 0.75;
   const emptyStars = Math.max(0, 5 - fullStars - (halfStar ? 1 : 0));
@@ -75,7 +75,7 @@ const RecipeTemplate: React.FC = () => {
     ...(halfStar ? ['half'] : []),
     ...Array(emptyStars).fill('empty')
   ];
-
+  console.log(stars);
   return (
     <div>
       <div className="navbar">
