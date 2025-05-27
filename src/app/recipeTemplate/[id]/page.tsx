@@ -9,11 +9,6 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "@/lib/firebase-client"; // Firestore instance
 import './recipeTemplate.css';
 
-// Firebase imports
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase-client";
-
 const RecipeTemplate: React.FC = () => {
   const { id } = useParams() as { id: string };
   const [recipe, setRecipe] = useState<Recipe | null>(null);

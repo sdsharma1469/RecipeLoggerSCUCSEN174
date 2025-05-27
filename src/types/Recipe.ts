@@ -7,8 +7,8 @@ export type Recipe = {
   createdAt: Timestamp | Date | string; // support all likely cases
   description?: string;
   ingredients: Array<{
-    //quantity: number;
-    //measurement: string;
+    quantity: number;
+    measurement: string;
     name: string;
   }>;
   steps: string[];
