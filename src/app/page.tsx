@@ -5,10 +5,13 @@ import { signInWithPopup, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, provider, db } from "@/lib/firebase-client";
 
+
+
 export default function SignupPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
 
   const handleAuth = async () => {
     setLoading(true);

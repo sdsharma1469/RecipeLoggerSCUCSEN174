@@ -5,7 +5,7 @@ import { useParams, useSearchParams } from 'next/navigation';
 import type { Recipe } from '@/types/Recipe';
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
 import { Timestamp, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { getAuth} from "firebase/auth";
 import { db, auth } from "@/lib/firebase-client"; // Firestore instance
 import './recipeTemplate.css';
 
@@ -15,8 +15,36 @@ const RecipeTemplate: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState<number | null>(null);
-  const [username, setUsername] = useState("");
-
+  const [username, setUsername] = useState<string>("");
+  useEffect(() => {
+    const fetchUsername = async () => {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+  
+      if (!currentUser) {
+        console.log("❌ No user signed in.");
+        return;
+      }
+  
+      try {
+        const userRef = doc(db, "Users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+  
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setUsername(userData.username || "");
+          console.log("✅ Username:", userData.username);
+        } else {
+          console.log("⚠️ No such user document in Firestore.");
+        }
+      } catch (error) {
+        console.error("❌ Error fetching user document:", error);
+      }
+    };
+  
+    fetchUsername();
+  }, []);
+  
   // Fetch recipe from id and calculate rating
   useEffect(() => {
     const fetchRecipe = async () => {
@@ -39,6 +67,28 @@ const RecipeTemplate: React.FC = () => {
     };
     fetchRecipe();
   }, [id]);
+
+  // Fetch logged-in user's username
+  useEffect(() => {
+    const fetchUsername = async () => {
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+  
+      try {
+        const userRef = doc(db, "Users", currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+          setUsername(userData.username || "");
+        }
+      } catch (error) {
+        console.error("❌ Failed to fetch user data:", error);
+      }
+    };
+  
+    fetchUsername();
+  }, []);
+  
 
   // Add to rating array in recipe
   const [showStars, setShowStars] = useState(false);
@@ -139,19 +189,36 @@ const RecipeTemplate: React.FC = () => {
     <div>
       {/* Top Navigation Bar */}
       <div className="navbar">
-        <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>View Recipe</div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
-        <a href={username ? `/home/${username}` : "/home"}>Home</a> |
-          <a href={username ? `/explore/${username}` : "/explore"}>Explore</a> |
-          <a href={username ? `/shoppingList/${username}` : "/shoppingList"}>Cart</a> |
-          <img
-            src="https://placehold.co/100   "
-            alt="User Profile"
-            style={{ borderRadius: '50%', width: '30px', height: '30px' }}
-          />
-          <span>{username}</span>
-        </div>
+      <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>View Recipe</div>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
+        <a
+          href={`/home/${username}`}
+          onMouseEnter={() => console.log("Home clicked. Username:", username)}
+        >
+          Home
+        </a> |
+        <a
+          href={`/explore/${username}`}
+          onClick={() => console.log("Explore clicked. Username:", username)}
+        >
+          Explore
+        </a> |
+        <a
+          href={`/shoppingList/${username}`}
+          onClick={() => console.log("Cart clicked. Username:", username)}
+        >
+          Cart
+        </a> |
+        <img
+          src="https://placehold.co/100"
+          alt="User Profile"
+          style={{ borderRadius: '50%', width: '30px', height: '30px' }}
+          onClick={() => console.log("Profile image clicked. Username:", username)}
+        />
+        <span>{username}</span>
       </div>
+    </div>
+
 
       <div className="container">
         <div className="left-column">

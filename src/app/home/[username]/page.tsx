@@ -13,7 +13,6 @@ const isOwnPage = async (username: string) => {
   const auth = getAuth();
   const currentUser = auth.currentUser;
   if (!currentUser) return false;
-
   const ownerUid = await getUserIdByUsername(username);
   return currentUser.uid === ownerUid;
 };
