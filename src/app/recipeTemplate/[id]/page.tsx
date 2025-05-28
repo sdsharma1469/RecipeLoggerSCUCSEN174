@@ -164,7 +164,8 @@ const RecipeTemplate: React.FC = () => {
             alt={recipe.name}
             className="recipe-image"
           />
-
+          <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Description:</h3>
+          <p>{recipe.description}</p>
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Ingredients:</h3>
           <ul className="list-disc ml-6">
             {recipe.ingredients.map((ingredient, index) => (
@@ -178,7 +179,18 @@ const RecipeTemplate: React.FC = () => {
               </li>
             ))}
           </ul>
-
+    
+          <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tools/Appliances:</h3>
+          {recipe.tools.knife && <p style={{ fontSize: "1.1em" }}>Knife</p>}
+          {recipe.tools.oven && <p style={{ fontSize: "1.1em" }}>Oven</p>}
+          {recipe.tools.airFryer && <p style={{ fontSize: "1.1em" }}>Air Fryer</p>}
+          {recipe.tools.stainlessSteelPan && <p style={{ fontSize: "1.1em" }}>Stainless Steel Pan</p>}
+          {recipe.tools.kettle && <p style={{ fontSize: "1.1em" }}>Kettle</p>}
+          {recipe.tools.wok && <p style={{ fontSize: "1.1em" }}>Wok</p>}
+          {recipe.tools.smallPot && <p style={{ fontSize: "1.1em" }}>Small Pot</p>}
+          {recipe.tools.mediumPot && <p style={{ fontSize: "1.1em" }}>Medium Pot</p>}
+          {recipe.tools.largePot && <p style={{ fontSize: "1.1em" }}>Large Pot</p>}
+          
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Steps:</h3>
           <ol className="list-decimal ml-6">
             {recipe.steps.map((step, index) => (
