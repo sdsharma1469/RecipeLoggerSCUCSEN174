@@ -2,30 +2,30 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { getAuth } from 'firebase/auth'
+import { getAuth, onAuthStateChanged } from 'firebase/auth'
 import { getFirestore, doc, getDoc } from 'firebase/firestore'
-import { app } from '@/lib/firebase-client' // ensure you export your `app` here
+import { app } from '@/lib/firebase-client'
 
 export default function Navbar() {
   const [username, setUsername] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchUsername = async () => {
-      const auth = getAuth(app)
-      const user = auth.currentUser
-      if (!user) return
+    const auth = getAuth(app)
 
-      const db = getFirestore(app)
-      const userRef = doc(db, 'Users', user.uid)
-      const userSnap = await getDoc(userRef)
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const db = getFirestore(app)
+        const userRef = doc(db, 'Users', user.uid)
+        const userSnap = await getDoc(userRef)
 
-      if (userSnap.exists()) {
-        const data = userSnap.data()
-        setUsername(data.username || null)
+        if (userSnap.exists()) {
+          const data = userSnap.data()
+          setUsername(data.username || user.email?.split('@')[0] || 'User')
+        }
       }
-    }
+    })
 
-    fetchUsername()
+    return () => unsubscribe()
   }, [])
 
   return (
