@@ -33,6 +33,25 @@ declare global {
   }
 }
 
+// Defined a new tagProps type to fix that text variable being set to type any
+type TagProps = {
+  text: string;
+};
+
+// Creates the tag component so I don't gotta rewrite the styling every single time
+const Tag = ({ text }: TagProps) => (
+  <p style={{
+    fontSize: "0.85em",
+    backgroundColor: "#d2f4d2",
+    padding: "0.2em 0.5em",
+    marginRight: "0.3em",
+    borderRadius: "5px",
+    marginBottom: "0.5em"
+  }}>
+    {text}
+  </p>
+);
+
 const RecipeTemplate: React.FC = () => {
   const { id } = useParams() as { id: string };
   const searchParams = useSearchParams();
@@ -437,28 +456,40 @@ const RecipeTemplate: React.FC = () => {
           <h3 style={{ fontSize: "1.1em" }}>From users: {recipe.userDiff}/5</h3>
 
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Total Estimated Price</h2>
-          <h3 style={{ fontSize: "1.1em" }}>{totalCost}</h3>
+          <h3 style={{ fontSize: "1.1em" }}>{totalCost ? totalCost : "Please Fetch Price via Deepseek First"}</h3>
 
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tags</h3>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3em" }}>
-            {recipe.tags.halal && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Halal</p>}
-            {recipe.tags.lactoseFree && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Lactose Free</p>}
-            {recipe.tags.vegan && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Vegan</p>}
-            {recipe.tags.vegetarian && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Vegetarian</p>}
-            {recipe.tags.vegetarian && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Peanuts</p>}
-            {recipe.tags.vegetarian && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Soy</p>}
+            {Object.values(recipe.tags).some(Boolean) ? (
+              <>
+                {recipe.tags.halal && <Tag text="Halal" />}
+                {recipe.tags.lactoseFree && <Tag text="Lactose Free" />}
+                {recipe.tags.vegan && <Tag text="Vegan" />}
+                {recipe.tags.vegetarian && <Tag text="Vegetarian" />}
+                {recipe.tags.peanuts && <Tag text="Peanuts" />}
+                {recipe.tags.soy && <Tag text="Soy" />}
+              </>
+            ) : (
+              <p style={{ fontSize: "0.9em", fontStyle: "italic" }}>No tags</p>
+            )}
           </div>
 
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tools</h3>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3em" }}>
-            {recipe.tools.airFryer && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Air Fryer</p>}
-            {recipe.tools.knife && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Knife</p>}
-            {recipe.tools.largePot && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Large Pot</p>}
-            {recipe.tools.mediumPot && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Medium Pot</p>}
-            {recipe.tools.oven && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Oven</p>}
-            {recipe.tools.smallPot && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Small Pot</p>}
-            {recipe.tools.stainlessSteelPan && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Stainless Steel Pan</p>}
-            {recipe.tools.wok && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Wok</p>}
+            {Object.values(recipe.tools).some(Boolean) ? (
+              <>
+                {recipe.tools.airFryer && <Tag text="Air Fryer" />}
+                {recipe.tools.knife && <Tag text="Knife" />}
+                {recipe.tools.largePot && <Tag text="Large Pot" />}
+                {recipe.tools.mediumPot && <Tag text="Medium Pot" />}
+                {recipe.tools.oven && <Tag text="Oven" />}
+                {recipe.tools.smallPot && <Tag text="Small Pot" />}
+                {recipe.tools.stainlessSteelPan && <Tag text="Stainless Steel Pan" />}
+                {recipe.tools.wok && <Tag text="Wok" />}
+              </>
+            ) : (
+              <p style={{ fontSize: "0.9em", fontStyle: "italic" }}>No tools</p>
+            )}
           </div>
           
           {/* Save Recipe Button */}
