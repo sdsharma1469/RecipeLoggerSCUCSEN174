@@ -1,221 +1,146 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useSearchParams } from 'next/navigation';
-import type { Recipe } from '@/types/Recipe';
+import { useParams, useSearchParams } from "next/navigation";
+import type { Recipe } from "@/types/Recipe";
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
-import { Timestamp, doc, updateDoc, arrayUnion, getDoc } from "firebase/firestore";
-import { getAuth} from "firebase/auth";
-import { db, auth } from "@/lib/firebase-client"; // Firestore instance
-import './recipeTemplate.css';
+import {
+  Timestamp,
+  doc,
+  updateDoc,
+  arrayUnion,
+  getDoc,
+} from "firebase/firestore";
+import { db, auth } from "@/lib/firebase-client";
+import "./recipeTemplate.css";
 
 const RecipeTemplate: React.FC = () => {
   const { id } = useParams() as { id: string };
+  const searchParams = useSearchParams();
+  const username = searchParams.get("username") || "Guest";
+
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState<number | null>(null);
-  const searchParams = useSearchParams(); // I added here a way to get the username from the URL from the explore page!
-  const username = searchParams.get('username') || 'Guest'; // I added here a way to get the username from the URL from the explore page!
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showStars, setShowStars] = useState(false);
 
-  useEffect(() => {
-    const fetchUsername = async () => {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
-  
-      if (!currentUser) {
-        console.log("❌ No user signed in.");
-        return;
-      }
-  
-      try {
-        const userRef = doc(db, "Users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-  
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setUsername(userData.username || "");
-          console.log("✅ Username:", userData.username);
-        } else {
-          console.log("⚠️ No such user document in Firestore.");
-        }
-      } catch (error) {
-        console.error("❌ Error fetching user document:", error);
-      }
-    };
-  
-    fetchUsername();
-  }, []);
-  
-  // Fetch recipe from id and calculate rating
+  // Fetch recipe by ID and calculate average rating
   useEffect(() => {
     const fetchRecipe = async () => {
       try {
         const fetchedRecipe = await fetchRecipeById(id);
         setRecipe(fetchedRecipe);
+
         const ratings: number[] = fetchedRecipe.rating || [];
-          if (ratings.length > 0) {
-            const sum = ratings.reduce((a, b) => a + b, 0);
-            const avg = sum / ratings.length;
-            setRating(Number(avg.toFixed(2)));
-          } else {
-            setRating(null);
-          }
+        if (ratings.length > 0) {
+          const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+          setRating(Number(avg.toFixed(2)));
+        } else {
+          setRating(null);
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchRecipe();
 
-    
+    fetchRecipe();
   }, [id]);
 
-  // Check if already saved
-useEffect(() => {
-  const checkSavedStatus = async () => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return;
-
-    const userRef = doc(db, "Users", currentUser.uid);
-    const userSnap = await getDoc(userRef);
-
-    if (userSnap.exists()) {
-      const userData = userSnap.data();
-      const savedList = userData.savedRecipes || [];
-
-      // Compare by recipeId only
-      const isSaved = savedList.some((r: any) => r.recipeId === id);
-      setSaved(isSaved);
-    }
-  };
-
-  checkSavedStatus();
-}, [id]);
-
-  // Fetch logged-in user's username
+  // Check if recipe is saved by current user
   useEffect(() => {
-    const fetchUsername = async () => {
+    const checkSavedStatus = async () => {
       const currentUser = auth.currentUser;
       if (!currentUser) return;
-  
-      try {
-        const userRef = doc(db, "Users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const userData = userSnap.data();
-          setUsername(userData.username || "");
-        }
-      } catch (error) {
-        console.error("❌ Failed to fetch user data:", error);
+
+      const userRef = doc(db, "Users", currentUser.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        const savedList = userData.savedRecipes || [];
+        const isSaved = savedList.some((r: any) => r.recipeId === id);
+        setSaved(isSaved);
       }
     };
-  
-    fetchUsername();
-  }, []);
-  
 
-  // Add to rating array in recipe
-  const [showStars, setShowStars] = useState(false);
-  const handleAddRating = async (newrating: number) => {
-    const user = auth.currentUser
+    checkSavedStatus();
+  }, [id]);
+
+  // Handler: Add Rating
+  const handleAddRating = async (newRating: number) => {
+    const user = auth.currentUser;
     if (!user) {
-      console.warn('🚫 User not logged in');
-      return false;
+      alert("Please log in to rate.");
+      return;
     }
+
     try {
-      const docSnap = await getDoc(doc(db, 'Recipes', id));
+      const docSnap = await getDoc(doc(db, "Recipes", id));
       if (docSnap.exists()) {
         const data = docSnap.data();
         const existingRatings = data.rating || [];
-        await updateDoc(doc(db, 'Recipes', id), {
-          rating: [...existingRatings, newrating],
+        await updateDoc(doc(db, "Recipes", id), {
+          rating: [...existingRatings, newRating],
         });
+        alert(`You rated this item ${newRating} star${newRating > 1 ? "s" : ""}.`);
+        setShowStars(false);
       }
-      alert(`You rated this item ${newrating} star${newrating > 1 ? 's' : ''}.`);
-      setShowStars(false);
     } catch (error) {
-      console.error('Error adding rating:', error);
-      alert('Failed to submit rating.');
+      console.error("Error adding rating:", error);
+      alert("Failed to submit rating.");
     }
   };
 
-  if (loading) return <p>Loading recipe...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (!recipe) return <p>No recipe found.</p>;
-
-  // Format created date
-  let createdAtDate: Date | null = null;
-  if (recipe.createdAt instanceof Timestamp) {
-    createdAtDate = recipe.createdAt.toDate();
-  } else if (typeof recipe.createdAt === 'string' || recipe.createdAt instanceof Date) {
-    createdAtDate = new Date(recipe.createdAt);
-  }
-
-  // Star rating logic
-  const safeRating = typeof rating === 'number' && rating !== null && rating >= 0 ? rating : 0;
-  const fullStars = Math.floor(safeRating);
-  const halfStar = safeRating % 1 >= 0.25 && safeRating % 1 <= 0.75;
-  const emptyStars = Math.max(0, 5 - fullStars - (halfStar ? 1 : 0));
-  const stars = [
-    ...Array(fullStars).fill('full'),
-    ...(halfStar ? ['half'] : []),
-    ...Array(emptyStars).fill('empty')
-  ];
-  console.log(stars);
-
+  // Handler: Save/Unsave Recipe
   const handleSaveRecipe = async () => {
-  const currentUser = auth.currentUser;
-  if (!currentUser) {
-    alert("Please log in to save recipes.");
-    return;
-  }
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      alert("Please log in to save recipes.");
+      return;
+    }
 
-  setSaving(true);
-  const userRef = doc(db, "Users", currentUser.uid);
-  const recipeData = {
-    recipeId: id,
-    recipeName: recipe.name,
-    author: recipe.author,
-    savedAt: Timestamp.now(),
+    setSaving(true);
+    const userRef = doc(db, "Users", currentUser.uid);
+    const recipeData = {
+      recipeId: id,
+      recipeName: recipe?.name || "",
+      author: recipe?.author || "",
+      savedAt: Timestamp.now(),
+    };
+
+    try {
+      const userSnap = await getDoc(userRef);
+      const userData = userSnap.data();
+      const savedList = userData?.savedRecipes || [];
+      const alreadySaved = savedList.some((r: any) => r.recipeId === id);
+
+      if (alreadySaved) {
+        const newSavedList = savedList.filter((r: any) => r.recipeId !== id);
+        await updateDoc(userRef, { savedRecipes: newSavedList });
+        setSaved(false);
+        alert("Removed from saved recipes");
+      } else {
+        await updateDoc(userRef, {
+          savedRecipes: [...savedList, recipeData],
+        });
+        setSaved(true);
+        alert("Recipe saved!");
+      }
+    } catch (err) {
+      console.error("Error toggling save:", err);
+      alert("Failed to update saved status.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  try {
-    const userSnap = await getDoc(userRef);
-    const userData = userSnap.data();
-
-    const savedList = userData?.savedRecipes || [];
-
-    const alreadySaved = savedList.some((r: any) => r.recipeId === id);
-
-    if (alreadySaved) {
-      // Remove from saved list
-      const newSavedList = savedList.filter((r: any) => r.recipeId !== id);
-      await updateDoc(userRef, { savedRecipes: newSavedList });
-      setSaved(false);
-      alert("Removed from saved recipes");
-    } else {
-      // Add to saved list
-      await updateDoc(userRef, {
-        savedRecipes: [...savedList, recipeData],
-      });
-      setSaved(true);
-      alert("Recipe saved!");
-    }
-  } catch (err) {
-    console.error("Error toggling save:", err);
-    alert("Failed to update saved status.");
-  } finally {
-    setSaving(false);
-  }
-};
-
-  // Add to Shopping List handler
+  // Handler: Add to Shopping List
   const handleAddToCart = async () => {
-    const auth = getAuth();
     const currentUser = auth.currentUser;
     if (!currentUser) {
       alert("Please log in to add to your shopping list.");
@@ -227,11 +152,10 @@ useEffect(() => {
 
     if (userSnap.exists()) {
       const userData = userSnap.data();
-
       const existingCart = userData.cart || [];
 
       const alreadyAdded = existingCart.some(
-        (item: any) => item.recipeID === recipe.recipeId
+        (item: any) => item.recipeID === recipe?.recipeId
       );
 
       if (alreadyAdded) {
@@ -239,17 +163,17 @@ useEffect(() => {
         return;
       }
 
-      const newIngredients = recipe.ingredients.map((ingredient) => ({
+      const newIngredients = recipe?.ingredients.map((ingredient) => ({
         name: ingredient.name,
         quantity: ingredient.quantity,
         checked: false,
-      }));
+      })) || [];
 
       const updatedCart = [
         ...existingCart,
         {
-          recipeID: recipe.recipeId,
-          recipeName: recipe.name,
+          recipeID: recipe?.recipeId,
+          recipeName: recipe?.name,
           ingredients: newIngredients,
         },
       ];
@@ -258,6 +182,30 @@ useEffect(() => {
       alert("Recipe added to your shopping list!");
     }
   };
+
+  // Rating star formatting
+  const safeRating = typeof rating === "number" && rating >= 0 ? rating : 0;
+  const fullStars = Math.floor(safeRating);
+  const halfStar = safeRating % 1 >= 0.25 && safeRating % 1 <= 0.75;
+  const emptyStars = Math.max(0, 5 - fullStars - (halfStar ? 1 : 0));
+  const stars = [
+    ...Array(fullStars).fill("full"),
+    ...(halfStar ? ["half"] : []),
+    ...Array(emptyStars).fill("empty"),
+  ];
+
+  // Format creation date
+  const createdAtDate =
+    recipe?.createdAt instanceof Timestamp
+      ? recipe.createdAt.toDate()
+      : recipe?.createdAt
+      ? new Date(recipe.createdAt)
+      : null;
+
+  // Show loading/errors
+  if (loading) return <p>Loading recipe...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!recipe) return <p>No recipe found.</p>;
 
   return (
     <div>
