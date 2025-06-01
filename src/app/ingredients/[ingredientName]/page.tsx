@@ -222,8 +222,6 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
               {loading ? "Thinking..." : "🔄 Refresh Info"}
             </button>
 
-            {/*<div id="ai-output" style={{ minHeight: "100px", whiteSpace: "pre-wrap", marginBottom: "1rem" }}></div>*/}
-
             <div style={{ backgroundColor: "#f8f8f8", padding: "1em", borderRadius: "8px", border: "1px solid #ddd", display: "flex", flexDirection: "column" }}>
               <p><strong>Deepseek Ingredient Details:</strong></p>
               <p><strong>Estimated Price:</strong> {priceEstimate}</p>

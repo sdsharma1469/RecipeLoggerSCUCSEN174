@@ -48,6 +48,9 @@ const RecipeTemplate: React.FC = () => {
   const [totalCost, setTotalCost] = useState<string | null>(null); // Added the total cost estimated here
   const [aiError, setAiError] = useState<string | null>(null); // Also added the Ai error states just in case
   const [nutrients, setNutrients] = useState<{ [key: string]: string } | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+  const [aiMacros, setAIMacros] = useState(null);
+  const [aiPrice, setAIPrice] = useState(null);
 
   // Load Puter script as we can't load it in normally without usual <script> support in jsx
   useEffect(() => {
@@ -242,51 +245,44 @@ const RecipeTemplate: React.FC = () => {
       ? new Date(recipe.createdAt)
       : null;
 
-  // Component code that applies the AI functionality of deepseet to estimate the total cost of the following ingredients with the quantities
-  useEffect(() => {
-    async function getTotalRecipeCost() {
-      if (!window.puter?.ai?.chat) return;
-      if (!recipe?.ingredients?.length) return;
-    
-      setLoading(true);
-      setAiError(null);
-    
-      try {
-        const prompt = `Estimate the total cost and provide a nutritional breakdown (macros and major nutrients) for the following ingredients with their quantities. Return only JSON like: { "totalPrice": "$5.40", "nutrients": { "calories": "200 kcal", "protein": "10g", ... } }\n\nIngredients:\n${recipe.ingredients
-          .map((ing) => `- ${ing.name} (${ing.quantity})`)
-          .join("\n")}`;
-        
-        const response = await window.puter.ai.chat(prompt, {
-          model: "deepseek-chat",
-          stream: true,
-          temperature: 0.6,
-          max_tokens: 300,
-        });
-      
-        let output = "";
-        for await (const part of response) {
-          if (part?.text) output += part.text;
-        }
-      
-        const jsonMatch = output.match(/{[\s\S]*}/)?.[0];
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch);
-          setTotalCost(parsed.totalPrice || "N/A");
-          // Optionally: save the nutrients if you want to display them
-          // setNutrients(parsed.nutrients || {});
-        } else {
-          throw new Error("No valid JSON found in AI response.");
-        }
-      } catch (err) {
-        console.error("AI error:", err);
-        setAiError("Failed to fetch estimated cost and nutrients.");
-      } finally {
-        setLoading(false);
+  const handleFetchAICost = async () => {
+    if (!window.puter?.ai?.chat || !recipe?.ingredients?.length) return;
+
+    setLoadingAI(true);
+    setAiError(null);
+
+    try {
+      const prompt = `Estimate the total cost and provide a nutritional breakdown (macros and major nutrients) for the following ingredients with their quantities. Return only JSON like: { "totalPrice": "$5.40", "nutrients": { "calories": "200 kcal", "protein": "10g", ... } }\n\nIngredients:\n${recipe.ingredients
+        .map((ing) => `- ${ing.name} (${ing.quantity})`)
+        .join("\n")}`;
+
+      const response = await window.puter.ai.chat(prompt, {
+        model: "deepseek-chat",
+        stream: true,
+        temperature: 0.6,
+        max_tokens: 300,
+      });
+
+      let output = "";
+      for await (const part of response) {
+        if (part?.text) output += part.text;
       }
+
+      const jsonMatch = output.match(/{[\s\S]*}/)?.[0];
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch);
+        setTotalCost(parsed.totalPrice || "N/A");
+        setNutrients(parsed.nutrients || {});
+      } else {
+        throw new Error("No valid JSON found in AI response.");
+      }
+    } catch (err) {
+      console.error("AI error:", err);
+      setAiError("Failed to fetch estimated cost and nutrients.");
+    } finally {
+      setLoadingAI(false);
     }
-  
-    if (recipe?.ingredients?.length) getTotalRecipeCost();
-  }, [recipe]);  
+  };
 
   // Show loading/errors
   if (loading) return <p>Loading recipe...</p>;
@@ -374,7 +370,48 @@ const RecipeTemplate: React.FC = () => {
               <li style={{ fontSize: "1.1em" }} key={index}>{step}</li>
             ))}
           </ol>
-        </div>
+
+          <div style={{ marginTop: "2rem" }}>
+            <h2><strong>Estimated Macros Via Deepseek</strong></h2>
+            <button
+              onClick={handleFetchAICost}
+              disabled={loadingAI}
+              style={{
+                backgroundColor: loadingAI ? "#ccc" : "#4caf50",
+                color: "#fff",
+                border: "none",
+                padding: "0.5em 1em",
+                borderRadius: "4px",
+                cursor: loadingAI ? "not-allowed" : "pointer",
+                transition: "background-color 0.3s",
+                marginBottom: "1rem",
+              }}
+              onMouseOver={(e) => !loadingAI && (e.currentTarget.style.backgroundColor = "#43a047")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#4caf50")}
+            >
+              {loadingAI ? "Thinking..." : "🔄 Refresh Info"}
+            </button>
+            
+            {aiError && <p style={{ color: "red" }}>{aiError}</p>}
+            
+            {(totalCost || nutrients) && (
+              <div
+                style={{
+                  backgroundColor: "#f8f8f8",
+                  padding: "1em",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                {nutrients && Object.entries(nutrients).map(([key, value]) => (
+                  <p key={key}><strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>        
 
         {/* Right Column with Rating + Difficulty + Add to Cart Button */}
         <div className="right-column">
@@ -396,18 +433,34 @@ const RecipeTemplate: React.FC = () => {
           )}
 
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Difficulty</h2>
-          <h3 style={{ fontSize: "1.1em" }}>From author: {recipe.authorDiff}/10</h3>
-          <h3 style={{ fontSize: "1.1em" }}>From users: {recipe.userDiff}/10</h3>
+          <h3 style={{ fontSize: "1.1em" }}>From author: {recipe.authorDiff}/5</h3>
+          <h3 style={{ fontSize: "1.1em" }}>From users: {recipe.userDiff}/5</h3>
 
-          <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Average Price</h2>
-          <h3 style={{ fontSize: "1.1em" }}>${recipe.cost}</h3>
-      
+          <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Total Estimated Price</h2>
+          <h3 style={{ fontSize: "1.1em" }}>{totalCost}</h3>
+
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tags</h3>
-          {recipe.tags.halal && <p style={{ fontSize: "1.1em" }}>Halal</p>}
-          {recipe.tags.lactoseFree && <p style={{ fontSize: "1.1em" }}>Lactose Free</p>}
-          {recipe.tags.vegan && <p style={{ fontSize: "1.1em" }}>Vegan</p>}
-          {recipe.tags.vegetarian && <p style={{ fontSize: "1.1em" }}>Vegetarian</p>}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3em" }}>
+            {recipe.tags.halal && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Halal</p>}
+            {recipe.tags.lactoseFree && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Lactose Free</p>}
+            {recipe.tags.vegan && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Vegan</p>}
+            {recipe.tags.vegetarian && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Vegetarian</p>}
+            {recipe.tags.vegetarian && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Peanuts</p>}
+            {recipe.tags.vegetarian && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Soy</p>}
+          </div>
 
+          <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tools</h3>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3em" }}>
+            {recipe.tools.airFryer && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Air Fryer</p>}
+            {recipe.tools.knife && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Knife</p>}
+            {recipe.tools.largePot && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Large Pot</p>}
+            {recipe.tools.mediumPot && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Medium Pot</p>}
+            {recipe.tools.oven && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Oven</p>}
+            {recipe.tools.smallPot && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Small Pot</p>}
+            {recipe.tools.stainlessSteelPan && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Stainless Steel Pan</p>}
+            {recipe.tools.wok && <p style={{ fontSize: "0.85em", backgroundColor: "#d2f4d2", padding: "0.2em 0.5em", marginRight: "0.3em", borderRadius: "5px", marginBottom: "0.5em" }}>Wok</p>}
+          </div>
+          
           {/* Save Recipe Button */}
           <button
             onClick={handleSaveRecipe}
