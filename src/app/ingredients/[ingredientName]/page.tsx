@@ -194,77 +194,75 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
         </div>
       </div>
 
-      <div >
-      <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-        <h1 style={{ fontSize: "1.5em", fontWeight: "bold", marginBottom: "1.5rem" }}>{decodedIngredientName}</h1>
+      <div>
+        <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
+          <h1 style={{ fontSize: "1.5em", fontWeight: "bold", marginBottom: "1.5rem" }}>{decodedIngredientName}</h1>
 
-        <div id="ingredient-image" style={{ marginBottom: "1.5rem" }}>
-          {ingredientImage ? (
-            <img src={ingredientImage} alt={decodedIngredientName} style={{ width: "200px", borderRadius: "10px" }} />
-          ) : (
-            <p>Loading image...</p>
-          )}
-        </div>
-
-        <div id="ingredient-calories" style={{ marginBottom: "1.5rem" }}>
-          <strong>Calories:</strong> {calories ? `${calories.amount} ${calories.unit}` : "Not found"}
-        </div>
-
-        <div style={{ marginBottom: "1.5rem" }}>
-          <h2><strong>Estimated Cost & Macros</strong></h2>
-          <button
-            onClick={fetchIngredientInfo}
-            disabled={loading}
-            style={{ backgroundColor: loading ? "#ccc" : "#4caf50", color: "#fff", border: "none", padding: "0.5em 1em", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", transition: "background-color 0.3s", marginBottom: "1rem" }}
-            onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = "#43a047")}
-            onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#4caf50")}
-          >
-            {loading ? "Thinking..." : "🔄 Refresh Info"}
-          </button>
-
-          {/*<div id="ai-output" style={{ minHeight: "100px", whiteSpace: "pre-wrap", marginBottom: "1rem" }}></div>*/}
-
-          <div style={{ backgroundColor: "#f8f8f8", padding: "1em", borderRadius: "8px", border: "1px solid #ddd", display: "flex", flexDirection: "column" }}>
-            <p><strong>Deepseek Ingredient Details:</strong></p>
-            <p><strong>Estimated Price:</strong> {priceEstimate}</p>
-            {macroEstimate && (
-              <>
-                <p><strong>Protein:</strong> {macroEstimate.protein}</p>
-                <p><strong>Carbs:</strong> {macroEstimate.carbs}</p>
-                <p><strong>Fat:</strong> {macroEstimate.fat}</p>
-              </>
+          <div id="ingredient-image" style={{ marginBottom: "1.5rem" }}>
+            {ingredientImage ? (
+              <img src={ingredientImage} alt={decodedIngredientName} style={{ width: "200px", borderRadius: "10px" }} />
+            ) : (
+              <p>Loading image...</p>
             )}
           </div>
-        </div>
 
-        <div id="ingredient-nutrients" style={{ marginBottom: "1.5rem" }}>
-          <h2><strong>USDA Nutritional Info</strong></h2>
-          {ingredientData ? (
-            <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-              {protein && <li><strong>Protein:</strong> {protein.amount} {protein.unit}</li>}
-              {carbohydrates && <li><strong>Carbs:</strong> {carbohydrates.amount} {carbohydrates.unit}</li>}
-              {fat && <li><strong>Fat:</strong> {fat.amount} {fat.unit}</li>}
-            </ul>
-          ) : (
-            <p>Loading nutritional information...</p>
-          )}
-        </div>
+          <div id="ingredient-calories" style={{ marginBottom: "1.5rem" }}>
+            <strong>Calories:</strong> {calories ? `${calories.amount} ${calories.unit}` : "Not found"}
+          </div>
 
-        <div id="ingredient-buy" style={{ marginBottom: "2rem" }}>
-          <h2><strong>Where to Buy</strong></h2>
-          <a
-            className="amazon-link"
-            href={`https://www.amazon.com/s?k=${encodeURIComponent(decodedIngredientName)}&i=amazonfresh`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ textDecoration: "underline", color: "#388e3c", fontWeight: "bold" }}
-          >
-            Search Amazon Fresh
-          </a>
-        </div>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <h2><strong>Estimated Cost & Macros</strong></h2>
+            <button
+              onClick={fetchIngredientInfo}
+              disabled={loading}
+              style={{ backgroundColor: loading ? "#ccc" : "#4caf50", color: "#fff", border: "none", padding: "0.5em 1em", borderRadius: "4px", cursor: loading ? "not-allowed" : "pointer", transition: "background-color 0.3s", marginBottom: "1rem" }}
+              onMouseOver={(e) => !loading && (e.currentTarget.style.backgroundColor = "#43a047")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#4caf50")}
+            >
+              {loading ? "Thinking..." : "🔄 Refresh Info"}
+            </button>
 
-        {error && <p style={{ color: "red" }}>{error}</p>}
-      </main>
+            <div style={{ backgroundColor: "#f8f8f8", padding: "1em", borderRadius: "8px", border: "1px solid #ddd", display: "flex", flexDirection: "column" }}>
+              <p><strong>Deepseek Ingredient Details:</strong></p>
+              <p><strong>Estimated Price:</strong> {priceEstimate}</p>
+              {macroEstimate && (
+                <>
+                  <p><strong>Protein:</strong> {macroEstimate.protein}</p>
+                  <p><strong>Carbs:</strong> {macroEstimate.carbs}</p>
+                  <p><strong>Fat:</strong> {macroEstimate.fat}</p>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div id="ingredient-nutrients" style={{ marginBottom: "1.5rem" }}>
+            <h2><strong>USDA Nutritional Info</strong></h2>
+            {ingredientData ? (
+              <ul style={{ listStyle: "none", paddingLeft: 0 }}>
+                {protein && <li><strong>Protein:</strong> {protein.amount} {protein.unit}</li>}
+                {carbohydrates && <li><strong>Carbs:</strong> {carbohydrates.amount} {carbohydrates.unit}</li>}
+                {fat && <li><strong>Fat:</strong> {fat.amount} {fat.unit}</li>}
+              </ul>
+            ) : (
+              <p>Loading nutritional information...</p>
+            )}
+          </div>
+
+          <div id="ingredient-buy" style={{ marginBottom: "2rem" }}>
+            <h2><strong>Where to Buy</strong></h2>
+            <a
+              className="amazon-link"
+              href={`https://www.amazon.com/s?k=${encodeURIComponent(decodedIngredientName)}&i=amazonfresh`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "underline", color: "#388e3c", fontWeight: "bold" }}
+            >
+              Search Amazon Fresh
+            </a>
+          </div>
+
+          {error && <p style={{ color: "red" }}>{error}</p>}
+        </main>
       </div>
     </div>
   );
