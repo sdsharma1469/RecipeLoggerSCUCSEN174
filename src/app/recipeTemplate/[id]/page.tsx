@@ -14,6 +14,25 @@ import {
 import { db, auth } from "@/lib/firebase-client";
 import "./recipeTemplate.css";
 
+// Declare Puter global types to be used
+declare global {
+  interface Window {
+    puter: {
+      ai: {
+        chat: (
+          prompt: string,
+          options: {
+            model: string;
+            stream: boolean;
+            temperature: number;
+            max_tokens: number;
+          }
+        ) => AsyncIterable<{ text?: string }>;
+      };
+    };
+  }
+}
+
 const RecipeTemplate: React.FC = () => {
   const { id } = useParams() as { id: string };
   const searchParams = useSearchParams();
@@ -21,11 +40,32 @@ const RecipeTemplate: React.FC = () => {
 
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [rating, setRating] = useState<number | null>(null);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showStars, setShowStars] = useState(false);
+  const [totalCost, setTotalCost] = useState<string | null>(null); // Added the total cost estimated here
+  const [aiError, setAiError] = useState<string | null>(null); // Also added the Ai error states just in case
+  const [nutrients, setNutrients] = useState<{ [key: string]: string } | null>(null);
+
+  // Load Puter script as we can't load it in normally without usual <script> support in jsx
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://js.puter.com/v2/ ";
+    script.async = true;
+    script.onload = () => {
+      console.log("Puter.js loaded successfully");
+    };
+    script.onerror = () => {
+      setAiError("Failed to load Puter AI.");
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   // Fetch recipe by ID and calculate average rating
   useEffect(() => {
@@ -201,6 +241,52 @@ const RecipeTemplate: React.FC = () => {
       : recipe?.createdAt
       ? new Date(recipe.createdAt)
       : null;
+
+  // Component code that applies the AI functionality of deepseet to estimate the total cost of the following ingredients with the quantities
+  useEffect(() => {
+    async function getTotalRecipeCost() {
+      if (!window.puter?.ai?.chat) return;
+      if (!recipe?.ingredients?.length) return;
+    
+      setLoading(true);
+      setAiError(null);
+    
+      try {
+        const prompt = `Estimate the total cost and provide a nutritional breakdown (macros and major nutrients) for the following ingredients with their quantities. Return only JSON like: { "totalPrice": "$5.40", "nutrients": { "calories": "200 kcal", "protein": "10g", ... } }\n\nIngredients:\n${recipe.ingredients
+          .map((ing) => `- ${ing.name} (${ing.quantity})`)
+          .join("\n")}`;
+        
+        const response = await window.puter.ai.chat(prompt, {
+          model: "deepseek-chat",
+          stream: true,
+          temperature: 0.6,
+          max_tokens: 300,
+        });
+      
+        let output = "";
+        for await (const part of response) {
+          if (part?.text) output += part.text;
+        }
+      
+        const jsonMatch = output.match(/{[\s\S]*}/)?.[0];
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch);
+          setTotalCost(parsed.totalPrice || "N/A");
+          // Optionally: save the nutrients if you want to display them
+          // setNutrients(parsed.nutrients || {});
+        } else {
+          throw new Error("No valid JSON found in AI response.");
+        }
+      } catch (err) {
+        console.error("AI error:", err);
+        setAiError("Failed to fetch estimated cost and nutrients.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  
+    if (recipe?.ingredients?.length) getTotalRecipeCost();
+  }, [recipe]);  
 
   // Show loading/errors
   if (loading) return <p>Loading recipe...</p>;
