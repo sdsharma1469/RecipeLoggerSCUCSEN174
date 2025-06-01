@@ -17,8 +17,11 @@ const RecipeTemplate: React.FC = () => {
   const [rating, setRating] = useState<number | null>(null);
   const searchParams = useSearchParams(); // I added here a way to get the username from the URL from the explore page!
   const username = searchParams.get('username') || 'Guest'; // I added here a way to get the username from the URL from the explore page!
+<<<<<<< HEAD
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+=======
+>>>>>>> 6b1387d8a3715fa822b846c3fb549dda9c80db8a
   useEffect(() => {
     const fetchUsername = async () => {
       const auth = getAuth();
