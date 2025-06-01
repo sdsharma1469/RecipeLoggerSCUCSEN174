@@ -15,7 +15,10 @@ const RecipeTemplate: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState<number | null>(null);
-  const [username, setUsername] = useState<string>("");
+  const searchParams = useSearchParams(); // I added here a way to get the username from the URL from the explore page!
+  const username = searchParams.get('username') || 'Guest'; // I added here a way to get the username from the URL from the explore page!
+  const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     const fetchUsername = async () => {
       const auth = getAuth();
@@ -66,7 +69,31 @@ const RecipeTemplate: React.FC = () => {
       }
     };
     fetchRecipe();
+
+    
   }, [id]);
+
+  // Check if already saved
+useEffect(() => {
+  const checkSavedStatus = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    const userRef = doc(db, "Users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const savedList = userData.savedRecipes || [];
+
+      // Compare by recipeId only
+      const isSaved = savedList.some((r: any) => r.recipeId === id);
+      setSaved(isSaved);
+    }
+  };
+
+  checkSavedStatus();
+}, [id]);
 
   // Fetch logged-in user's username
   useEffect(() => {
@@ -138,6 +165,52 @@ const RecipeTemplate: React.FC = () => {
     ...Array(emptyStars).fill('empty')
   ];
   console.log(stars);
+
+  const handleSaveRecipe = async () => {
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    alert("Please log in to save recipes.");
+    return;
+  }
+
+  setSaving(true);
+  const userRef = doc(db, "Users", currentUser.uid);
+  const recipeData = {
+    recipeId: id,
+    recipeName: recipe.name,
+    author: recipe.author,
+    savedAt: Timestamp.now(),
+  };
+
+  try {
+    const userSnap = await getDoc(userRef);
+    const userData = userSnap.data();
+
+    const savedList = userData?.savedRecipes || [];
+
+    const alreadySaved = savedList.some((r: any) => r.recipeId === id);
+
+    if (alreadySaved) {
+      // Remove from saved list
+      const newSavedList = savedList.filter((r: any) => r.recipeId !== id);
+      await updateDoc(userRef, { savedRecipes: newSavedList });
+      setSaved(false);
+      alert("Removed from saved recipes");
+    } else {
+      // Add to saved list
+      await updateDoc(userRef, {
+        savedRecipes: [...savedList, recipeData],
+      });
+      setSaved(true);
+      alert("Recipe saved!");
+    }
+  } catch (err) {
+    console.error("Error toggling save:", err);
+    alert("Failed to update saved status.");
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Add to Shopping List handler
   const handleAddToCart = async () => {
@@ -235,16 +308,18 @@ const RecipeTemplate: React.FC = () => {
           <p>{recipe.description}</p>
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Ingredients:</h3>
           <ul className="list-disc ml-6">
-            {recipe.ingredients.map((ingredient, index) => (
-              <li key={index}>
-                <a
-                  href={`/ingredients/${encodeURIComponent(ingredient.name)}?username=${username}`}
-                  className="text-blue-600 hover:underline"
-                >
-                  {ingredient.quantity} × {ingredient.name}
-                </a>
-              </li>
-            ))}
+          {recipe.ingredients.map((ingredient, index) => (
+            <li key={index}>
+              <a
+                href={`/ingredients/${encodeURIComponent(ingredient.name)}?username=${username}`}
+                className="text-blue-600 hover:underline"
+              >
+                {ingredient.quantity}{" "}
+                {ingredient.quantity > 1 ? `${ingredient.measurement}s` : ingredient.measurement}{" "}
+                {ingredient.name}
+              </a>
+            </li>
+          ))}
           </ul>
     
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tools/Appliances:</h3>
@@ -297,6 +372,25 @@ const RecipeTemplate: React.FC = () => {
           {recipe.tags.lactoseFree && <p style={{ fontSize: "1.1em" }}>Lactose Free</p>}
           {recipe.tags.vegan && <p style={{ fontSize: "1.1em" }}>Vegan</p>}
           {recipe.tags.vegetarian && <p style={{ fontSize: "1.1em" }}>Vegetarian</p>}
+
+          {/* Save Recipe Button */}
+          <button
+            onClick={handleSaveRecipe}
+            disabled={saving}
+            style={{
+              marginTop: "2rem",
+              padding: "0.5rem 1rem",
+              backgroundColor: saved ? "#f44336" : "#4caf50",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              fontSize: "1rem",
+              width: "100%",
+            }}
+          >
+            {saving ? "Saving..." : saved ? "Unsave Recipe" : "Save Recipe"}
+          </button>
 
           {/* Add to Shopping List Button */}
           <button
