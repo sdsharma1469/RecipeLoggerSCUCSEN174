@@ -47,6 +47,7 @@ export default function UploadRecipePage() {
   const [oven, setOven] = useState(false);
   const [airFryer, setAirFryer] = useState(false);
   const [stainlessSteelPan, setStainlessSteelPan] = useState(false);
+  const [grater, setGrater] = useState(false);
   const [wok, setWok] = useState(false);
   const [smallPot, setSmallPot] = useState(false);
   const [mediumPot, setMediumPot] = useState(false);
@@ -327,6 +328,7 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
           smallPot,
           mediumPot,
           largePot,
+          grater,
         },
         rating: [creatorRating],
         authorDiff: creatorRating,
@@ -627,6 +629,9 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
               <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input type="checkbox" checked={largePot} onChange={() => setLargePot(!largePot)} /> Large Pot
               </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={largePot} onChange={() => setGrater(!grater)} /> Cheese Grater
+              </label>
             </div>
           </div>
 
@@ -698,7 +703,7 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
               <button
                 type="button"
                 onClick={handleAddIngredient}
-                disabled={ingredients.length >= 20}
+                disabled={ingredients.length >= 50}
                 style={{
                   padding: "0.5em",
                   cursor: "pointer",

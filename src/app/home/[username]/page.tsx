@@ -191,16 +191,7 @@ export default function HomePage() {
                   <div className="recipe-card" style={{ cursor: "pointer" }}>
                     <h3>{recipe.name}</h3>
                     <p>
-                      <strong>Ingredients:</strong>{" "}
-                      {recipe.ingredients.map((ing) => {
-                        if (typeof ing === "object" && ing !== null) {
-                          return `${ing.quantity || ""} ${ing.measurement || ""} ${ing.name || ""}`;
-                        }
-                        return ing;
-                      }).join(", ")}
-                    </p>
-                    <p>
-                      <strong>Steps:</strong> {recipe.steps.join(" → ")}
+                      <strong>Description:</strong> {recipe.description || "No description available"}
                     </p>
                   </div>
                 </Link>

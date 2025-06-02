@@ -382,6 +382,7 @@ const RecipeTemplate: React.FC = () => {
           {recipe.tools.smallPot && <p style={{ fontSize: "1.1em" }}>Small Pot</p>}
           {recipe.tools.mediumPot && <p style={{ fontSize: "1.1em" }}>Medium Pot</p>}
           {recipe.tools.largePot && <p style={{ fontSize: "1.1em" }}>Large Pot</p>}
+          {recipe.tools.grater && <p style={{ fontSize: "1.1em" }}>Grater</p>}
           
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Steps:</h3>
           <ol className="list-decimal ml-6">
@@ -491,6 +492,7 @@ const RecipeTemplate: React.FC = () => {
                 {recipe.tools.smallPot && <Tag text="Small Pot" />}
                 {recipe.tools.stainlessSteelPan && <Tag text="Stainless Steel Pan" />}
                 {recipe.tools.wok && <Tag text="Wok" />}
+                {recipe.tools.grater && <Tag text="Grater" />}
               </>
             ) : (
               <p style={{ fontSize: "0.9em", fontStyle: "italic" }}>No tools</p>
