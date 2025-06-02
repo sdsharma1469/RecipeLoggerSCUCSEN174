@@ -7,10 +7,11 @@ import "./home.css";
 import { useEffect } from "react";
 
 // Firebase imports
-import { auth } from "@/lib/firebase-client";
+import { auth, storage } from "@/lib/firebase-client"; // Added storage import
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase-client";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // Added storage functions
 
 // Upload utility
 import { uploadRecipeClientSide } from "@/lib/utils/Recipes/Upload";
@@ -27,6 +28,11 @@ export default function UploadRecipePage() {
   const [creatorRating, setCreatorRating] = useState(0);
   const [difficulty, setDifficulty] = useState(1);
   const [estimatedPrice, setEstimatedPrice] = useState(0);
+
+  // Image upload states
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Tags
   const [halal, setHalal] = useState(false);
@@ -72,7 +78,10 @@ export default function UploadRecipePage() {
     document.body.appendChild(script);
 
     return () => {
-      document.body.removeChild(script);
+      // Check if script still exists before removing
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
     };
   }, []);
 
@@ -98,6 +107,76 @@ export default function UploadRecipePage() {
 
     return () => unsubscribe();
   }, []);
+
+  // Handle image selection
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setStatus("❌ Please select a valid image file.");
+        return;
+      }
+      
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        setStatus("❌ Image must be smaller than 5MB.");
+        return;
+      }
+
+      setSelectedImage(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      // Clear any previous status messages
+      setStatus("");
+    }
+  };
+
+  // Remove selected image
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    // Reset file input
+    const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  // Upload image to Firebase Storage
+  const uploadImage = async (file: File, recipeId: string): Promise<string | null> => {
+    try {
+      setUploadingImage(true);
+      
+      // Check if Firebase Storage is properly initialized
+      if (!storage) {
+        console.error("Firebase Storage not initialized");
+        throw new Error("Storage service not available");
+      }
+      
+      const fileName = `recipes/${recipeId}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const imageRef = ref(storage, fileName);
+      
+      console.log("Uploading image to:", fileName);
+      const snapshot = await uploadBytes(imageRef, file);
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      
+      console.log("Image uploaded successfully:", downloadURL);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      setStatus("❌ Failed to upload image. Recipe will be saved without image.");
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const estimateRecipePrice = async () => {
     if (!window.puter?.ai) {
@@ -135,13 +214,11 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
 
       const response = await window.puter.ai.chat(prompt, {
         model: 'deepseek-chat',
-        temperature: 0.1, // Lower temperature for more consistent responses
-        max_tokens: 50, // Much lower since we only need a number
+        temperature: 0.1,
+        max_tokens: 50,
       });
 
       console.log("🤖 Raw AI response:", JSON.stringify(response));
-      console.log("🤖 Response type:", typeof response);
-      console.log("🤖 Response length:", response?.length);
 
       if (!response) {
         console.error("❌ Empty response from AI");
@@ -150,25 +227,20 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
         return null;
       }
 
-      // Clean the response thoroughly
       const cleanResponse = String(response).trim();
       console.log("🧹 Cleaned response:", JSON.stringify(cleanResponse));
 
-      // More comprehensive number extraction
       let estimatedPrice = null;
 
-      // Try direct parsing first
       const directParse = parseFloat(cleanResponse);
       if (!isNaN(directParse) && directParse > 0) {
         estimatedPrice = directParse;
         console.log("✅ Direct parse successful:", estimatedPrice);
       } else {
-        // Try extracting any number from the text
         const allNumbers = cleanResponse.match(/\d+\.?\d*/g);
         console.log("🔢 All numbers found:", allNumbers);
         
         if (allNumbers && allNumbers.length > 0) {
-          // Take the first valid number
           for (const numStr of allNumbers) {
             const num = parseFloat(numStr);
             if (!isNaN(num) && num > 0) {
@@ -210,56 +282,73 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
       return;
     }
 
-    setStatus("💭 Estimating recipe cost...");
-    const estimatedCost = await estimateRecipePrice();
+    try {
+      setStatus("💭 Estimating recipe cost...");
+      const estimatedCost = await estimateRecipePrice();
 
-    // Check if price estimation failed
-    if (estimatedCost === null) {
-      setStatus("❌ Failed to estimate recipe price. Please try again or check your ingredients.");
-      return; // Don't proceed with upload if price estimation fails
-    }
+      if (estimatedCost === null) {
+        setStatus("❌ Failed to estimate recipe price. Please try again or check your ingredients.");
+        return;
+      }
 
-    const recipeId = uuidv4();
-    const recipe: Recipe = {
-      recipeId,
-      author: username,
-      createdAt: Timestamp.now(),
-      name,
-      description,
-      ingredients: ingredients.map((ing) => ({
-        quantity: parseFloat(ing.quantity) || 0,
-        measurement: ing.measurement,
-        name: ing.name.trim(),
-      })),
-      steps: steps.split("\n").map((step) => step.trim()).filter(Boolean),
-      comments: [],
-      tags: { halal, vegan, vegetarian, lactoseFree, soy, peanuts },
-      tools: {
-        knife,
-        oven,
-        airFryer,
-        stainlessSteelPan,
-        kettle: false, // Added missing kettle field from Recipe type
-        wok,
-        smallPot,
-        mediumPot,
-        largePot,
-      },
-      rating: [creatorRating],
-      authorDiff: creatorRating,
-      userDiff: difficulty,
-      price: estimatedCost, // This will now be the exact value from DeepSeek
-    };
+      const recipeId = uuidv4();
+      
+      // Upload image if selected
+      let imageUrl = null;
+      if (selectedImage) {
+        setStatus("📸 Uploading image...");
+        imageUrl = await uploadImage(selectedImage, recipeId);
+        // Continue even if image upload fails
+      }
 
-    console.log("Attempting to upload recipe:", recipe);
+      const recipe: Recipe = {
+        recipeId,
+        author: username,
+        createdAt: Timestamp.now(),
+        name,
+        description,
+        ingredients: ingredients
+          .filter(ing => ing.name.trim()) // Filter out empty ingredients
+          .map((ing) => ({
+            quantity: parseFloat(ing.quantity) || 0,
+            measurement: ing.measurement,
+            name: ing.name.trim(),
+          })),
+        steps: steps.split("\n").map((step) => step.trim()).filter(Boolean),
+        comments: [],
+        tags: { halal, vegan, vegetarian, lactoseFree, soy, peanuts },
+        tools: {
+          knife,
+          oven,
+          airFryer,
+          stainlessSteelPan,
+          kettle: false,
+          wok,
+          smallPot,
+          mediumPot,
+          largePot,
+        },
+        rating: [creatorRating],
+        authorDiff: creatorRating,
+        userDiff: difficulty,
+        price: estimatedCost,
+        ...(imageUrl && { imageUrl }), // Only add imageUrl if it exists
+      };
 
-    const success = await uploadRecipeClientSide(recipe);
+      console.log("Attempting to upload recipe:", recipe);
 
-    if (success) {
-      setStatus(`✅ Recipe uploaded! Estimated cost: $${estimatedCost.toFixed(2)}`);
-      resetForm();
-    } else {
-      setStatus("❌ Failed to upload recipe.");
+      setStatus("🔄 Uploading recipe...");
+      const success = await uploadRecipeClientSide(recipe);
+
+      if (success) {
+        setStatus(`✅ Recipe uploaded! Estimated cost: $${estimatedCost.toFixed(2)}${imageUrl ? ' (with image)' : ''}`);
+        resetForm();
+      } else {
+        setStatus("❌ Failed to upload recipe.");
+      }
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      setStatus(`❌ Upload failed: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -271,6 +360,8 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
     setCreatorRating(0);
     setDifficulty(1);
     setEstimatedPrice(0);
+    setSelectedImage(null);
+    setImagePreview(null);
     setHalal(false);
     setVegan(false);
     setVegetarian(false);
@@ -285,6 +376,12 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
     setSmallPot(false);
     setMediumPot(false);
     setLargePot(false);
+    
+    // Reset file input
+    const fileInput = document.getElementById('image-upload') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   };
 
   const handleIngredientChange = (index: number, field: string, value: string) => {
@@ -360,7 +457,7 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
         )}
 
         {/* Loading Indicator */}
-        {loadingAI && (
+        {(loadingAI || uploadingImage) && (
           <div style={{ 
             backgroundColor: "#e3f2fd", 
             color: "#1565c0", 
@@ -369,7 +466,8 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
             marginBottom: "1rem",
             border: "1px solid #bbdefb"
           }}>
-            🤖 AI is estimating recipe price...
+            {loadingAI && "🤖 AI is estimating recipe price..."}
+            {uploadingImage && "📸 Uploading image..."}
           </div>
         )}
 
@@ -402,6 +500,79 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
               minHeight: "80px",
             }}
           />
+
+          {/* Image Upload Section */}
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>
+              Recipe Image (Optional)
+            </label>
+            
+            {!imagePreview ? (
+              <div style={{ 
+                border: "2px dashed #ddd", 
+                borderRadius: "4px", 
+                padding: "2rem", 
+                textAlign: "center",
+                backgroundColor: "#fafafa"
+              }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  style={{ display: "none" }}
+                  id="image-upload"
+                />
+                <label 
+                  htmlFor="image-upload"
+                  style={{
+                    cursor: "pointer",
+                    color: "#4caf50",
+                    fontWeight: "bold"
+                  }}
+                >
+                  📷 Click to upload image
+                </label>
+                <p style={{ margin: "0.5rem 0 0 0", color: "#666", fontSize: "0.9rem" }}>
+                  Maximum file size: 5MB
+                </p>
+              </div>
+            ) : (
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <img
+                  src={imagePreview}
+                  alt="Recipe preview"
+                  style={{
+                    maxWidth: "300px",
+                    maxHeight: "200px",
+                    borderRadius: "4px",
+                    border: "1px solid #ddd"
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleRemoveImage}
+                  style={{
+                    position: "absolute",
+                    top: "8px",
+                    right: "8px",
+                    backgroundColor: "rgba(255, 0, 0, 0.7)",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "24px",
+                    height: "24px",
+                    cursor: "pointer",
+                    fontSize: "16px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Dietary Tags */}
           <div>
@@ -611,20 +782,20 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loadingAI}
+            disabled={loadingAI || uploadingImage}
             style={{
               alignSelf: "flex-start",
-              backgroundColor: loadingAI ? "#ccc" : "#4CAF50",
+              backgroundColor: (loadingAI || uploadingImage) ? "#ccc" : "#4CAF50",
               color: "#fff",
               border: "none",
               borderRadius: "4px",
-              cursor: loadingAI ? "not-allowed" : "pointer",
+              cursor: (loadingAI || uploadingImage) ? "not-allowed" : "pointer",
               fontSize: "1rem",
               padding: "0.5rem 1rem",
               transition: "background-color 0.3s",
             }}
           >
-            {loadingAI ? "Estimating Price..." : "Upload Recipe"}
+            {loadingAI ? "Estimating Price..." : uploadingImage ? "Uploading Image..." : "Upload Recipe"}
           </button>
 
           {/* Status Message */}
