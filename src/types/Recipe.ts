@@ -1,26 +1,30 @@
-import { Timestamp } from 'firebase/firestore'; // from firebase *client* SDK
+import { Timestamp } from 'firebase/firestore'; // from Firebase client SDK
 
 export type Recipe = {
-  name: string;
   recipeId: string;
   author: string;
   createdAt: Timestamp | Date | string; // support all likely cases
+  name: string;
   description?: string;
+
   ingredients: Array<{
     quantity: number;
     measurement: string;
     name: string;
   }>;
+
   steps: string[];
   comments: string[];
+
   tags: {
+    halal: boolean;
     vegan: boolean;
     vegetarian: boolean;
     lactoseFree: boolean;
-    halal: boolean;
     soy: boolean;
     peanuts: boolean;
   };
+
   tools: {
     knife: boolean;
     oven: boolean;
@@ -31,9 +35,15 @@ export type Recipe = {
     smallPot: boolean;
     mediumPot: boolean;
     largePot: boolean;
-};
-  authorDiff: number;
+  };
+
   rating: number[];
+  authorDiff: number;
   userDiff: number;
-  cost: number;
+
+  // ✅ Estimated price from AI
+  price: number;
+
+  // 🟡 Optional cost field (already used in some code)
+  cost?: number;
 };
