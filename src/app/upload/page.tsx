@@ -2,19 +2,23 @@
 import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Timestamp } from "firebase/firestore";
-import { Recipe } from "@/lib/types/Recipe"; // Assuming you have a Recipe type defined
+import { Recipe } from "@/lib/types/Recipe";
 import "./home.css";
+import { useEffect } from "react";
 
 // Firebase imports
 import { auth } from "@/lib/firebase-client";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase-client"; // Firestore instance
+import { db } from "@/lib/firebase-client";
 
 // Upload utility
 import { uploadRecipeClientSide } from "@/lib/utils/Recipes/Upload";
 
 export default function UploadRecipePage() {
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [ingredients, setIngredients] = useState([{ quantity: "1", measurement: "cup", name: "" }]);
@@ -22,6 +26,7 @@ export default function UploadRecipePage() {
   const [status, setStatus] = useState("");
   const [creatorRating, setCreatorRating] = useState(0);
   const [difficulty, setDifficulty] = useState(1);
+  const [estimatedPrice, setEstimatedPrice] = useState(0);
 
   // Tags
   const [halal, setHalal] = useState(false);
@@ -44,6 +49,33 @@ export default function UploadRecipePage() {
   // Auth
   const [username, setUsername] = useState("");
 
+  useEffect(() => {
+    if (window.puter?.ai) {
+      console.log("Puter AI already available");
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://js.puter.com/v2/"; 
+    script.async = true;
+
+    script.onload = () => {
+      console.log("Puter AI script loaded successfully");
+      setAiError(null);
+    };
+
+    script.onerror = () => {
+      console.error("Failed to load Puter AI script");
+      setAiError("⚠️ Failed to load AI integration.");
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   React.useEffect(() => {
     const firebaseAuth = getAuth();
     const unsubscribe = onAuthStateChanged(firebaseAuth, async (currentUser) => {
@@ -64,8 +96,108 @@ export default function UploadRecipePage() {
       }
     });
 
-    return () => unsubscribe(); // Clean up listener
+    return () => unsubscribe();
   }, []);
+
+  const estimateRecipePrice = async () => {
+    if (!window.puter?.ai) {
+      setAiError("⚠️ AI service not available. Please refresh the page.");
+      return null;
+    }
+
+    setLoadingAI(true);
+    setAiError(null);
+
+    try {
+      const ingredientsList = ingredients
+        .filter(ing => ing.name.trim())
+        .map(ing => `${ing.quantity} ${ing.measurement} ${ing.name}`)
+        .join(', ');
+
+      if (!ingredientsList) {
+        setAiError("⚠️ Please add ingredients before estimating price.");
+        setLoadingAI(false);
+        return null;
+      }
+
+      const prompt = `You are a grocery pricing expert. Estimate the total cost in USD for these recipe ingredients based on typical US supermarket prices: ${ingredientsList}
+
+Please consider:
+- Current average grocery store prices in the US
+- Standard package sizes (don't assume buying exact quantities)
+- Seasonal price variations
+- Common brand pricing
+
+IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text, no explanations - just the price as a decimal number.`;
+
+      console.log("🔍 Sending prompt to AI:", prompt);
+      console.log("🥕 Ingredients list:", ingredientsList);
+
+      const response = await window.puter.ai.chat(prompt, {
+        model: 'deepseek-chat',
+        temperature: 0.1, // Lower temperature for more consistent responses
+        max_tokens: 50, // Much lower since we only need a number
+      });
+
+      console.log("🤖 Raw AI response:", JSON.stringify(response));
+      console.log("🤖 Response type:", typeof response);
+      console.log("🤖 Response length:", response?.length);
+
+      if (!response) {
+        console.error("❌ Empty response from AI");
+        setAiError("⚠️ AI returned empty response.");
+        setLoadingAI(false);
+        return null;
+      }
+
+      // Clean the response thoroughly
+      const cleanResponse = String(response).trim();
+      console.log("🧹 Cleaned response:", JSON.stringify(cleanResponse));
+
+      // More comprehensive number extraction
+      let estimatedPrice = null;
+
+      // Try direct parsing first
+      const directParse = parseFloat(cleanResponse);
+      if (!isNaN(directParse) && directParse > 0) {
+        estimatedPrice = directParse;
+        console.log("✅ Direct parse successful:", estimatedPrice);
+      } else {
+        // Try extracting any number from the text
+        const allNumbers = cleanResponse.match(/\d+\.?\d*/g);
+        console.log("🔢 All numbers found:", allNumbers);
+        
+        if (allNumbers && allNumbers.length > 0) {
+          // Take the first valid number
+          for (const numStr of allNumbers) {
+            const num = parseFloat(numStr);
+            if (!isNaN(num) && num > 0) {
+              estimatedPrice = num;
+              console.log("✅ Extracted price from text:", estimatedPrice);
+              break;
+            }
+          }
+        }
+      }
+
+      setLoadingAI(false);
+
+      if (estimatedPrice === null || estimatedPrice <= 0) {
+        console.error("❌ Could not extract valid price from response:", cleanResponse);
+        setAiError(`⚠️ AI returned invalid price format: "${cleanResponse}"`);
+        return null;
+      }
+
+      console.log("🎯 Final estimated price:", estimatedPrice);
+      return estimatedPrice;
+
+    } catch (error) {
+      console.error("💥 AI estimation error:", error);
+      setAiError(`⚠️ Failed to estimate price: ${error.message || 'Unknown error'}`);
+      setLoadingAI(false);
+      return null;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,8 +210,17 @@ export default function UploadRecipePage() {
       return;
     }
 
+    setStatus("💭 Estimating recipe cost...");
+    const estimatedCost = await estimateRecipePrice();
+
+    // Check if price estimation failed
+    if (estimatedCost === null) {
+      setStatus("❌ Failed to estimate recipe price. Please try again or check your ingredients.");
+      return; // Don't proceed with upload if price estimation fails
+    }
+
     const recipeId = uuidv4();
-    const recipe = {
+    const recipe: Recipe = {
       recipeId,
       author: username,
       createdAt: Timestamp.now(),
@@ -98,6 +239,7 @@ export default function UploadRecipePage() {
         oven,
         airFryer,
         stainlessSteelPan,
+        kettle: false, // Added missing kettle field from Recipe type
         wok,
         smallPot,
         mediumPot,
@@ -106,15 +248,15 @@ export default function UploadRecipePage() {
       rating: [creatorRating],
       authorDiff: creatorRating,
       userDiff: difficulty,
-      cost: 0,
+      price: estimatedCost, // This will now be the exact value from DeepSeek
     };
 
-    console.log("Attempting to upload recipe:", recipe); // 🔍 Debug log
+    console.log("Attempting to upload recipe:", recipe);
 
     const success = await uploadRecipeClientSide(recipe);
 
     if (success) {
-      setStatus("✅ Recipe uploaded!");
+      setStatus(`✅ Recipe uploaded! Estimated cost: $${estimatedCost.toFixed(2)}`);
       resetForm();
     } else {
       setStatus("❌ Failed to upload recipe.");
@@ -128,6 +270,7 @@ export default function UploadRecipePage() {
     setSteps("");
     setCreatorRating(0);
     setDifficulty(1);
+    setEstimatedPrice(0);
     setHalal(false);
     setVegan(false);
     setVegetarian(false);
@@ -201,6 +344,35 @@ export default function UploadRecipePage() {
       {/* Main Upload Form */}
       <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
         <h1>Upload a Recipe</h1>
+        
+        {/* AI Error Display */}
+        {aiError && (
+          <div style={{ 
+            backgroundColor: "#ffebee", 
+            color: "#c62828", 
+            padding: "1rem", 
+            borderRadius: "4px", 
+            marginBottom: "1rem",
+            border: "1px solid #ffcdd2"
+          }}>
+            {aiError}
+          </div>
+        )}
+
+        {/* Loading Indicator */}
+        {loadingAI && (
+          <div style={{ 
+            backgroundColor: "#e3f2fd", 
+            color: "#1565c0", 
+            padding: "1rem", 
+            borderRadius: "4px", 
+            marginBottom: "1rem",
+            border: "1px solid #bbdefb"
+          }}>
+            🤖 AI is estimating recipe price...
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {/* Title */}
           <input
@@ -231,9 +403,9 @@ export default function UploadRecipePage() {
             }}
           />
 
-          {/* Ingredients */}
+          {/* Dietary Tags */}
           <div>
-            <label>Dietary Tags</label>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Dietary Tags</label>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
               <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <input type="checkbox" checked={halal} onChange={() => setHalal(!halal)} /> Halal
@@ -256,9 +428,40 @@ export default function UploadRecipePage() {
             </div>
           </div>
 
+          {/* Tools/Appliances Section */}
+          <div>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Required Tools & Appliances</label>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.5rem" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={knife} onChange={() => setKnife(!knife)} /> Knife
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={oven} onChange={() => setOven(!oven)} /> Oven
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={airFryer} onChange={() => setAirFryer(!airFryer)} /> Air Fryer
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={stainlessSteelPan} onChange={() => setStainlessSteelPan(!stainlessSteelPan)} /> Stainless Steel Pan
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={wok} onChange={() => setWok(!wok)} /> Wok
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={smallPot} onChange={() => setSmallPot(!smallPot)} /> Small Pot
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={mediumPot} onChange={() => setMediumPot(!mediumPot)} /> Medium Pot
+              </label>
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <input type="checkbox" checked={largePot} onChange={() => setLargePot(!largePot)} /> Large Pot
+              </label>
+            </div>
+          </div>
+
           {/* Ingredient Fields */}
           <div>
-            <label style={{ display: "block", marginBottom: "0.5rem" }}>Ingredients:</label>
+            <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "bold" }}>Ingredients:</label>
             {ingredients.map((ingredient, index) => (
               <div key={index} style={{ display: "flex", gap: "0.5em", marginBottom: "0.5em" }}>
                 <input
@@ -311,14 +514,9 @@ export default function UploadRecipePage() {
                     cursor: "pointer",
                     borderRadius: "4px",
                     border: "none",
+                    backgroundColor: ingredients.length <= 1 ? "#ccc" : "#ffcdd2",
                     transition: "background-color 0.3s",
                   }}
-                  onMouseOver={(e) =>
-                    (e.currentTarget.style.backgroundColor = "#d6ead6")
-                  }
-                  onMouseOut={(e) =>
-                    (e.currentTarget.style.backgroundColor = "transparent")
-                  }
                 >
                   &times;
                 </button>
@@ -338,12 +536,6 @@ export default function UploadRecipePage() {
                   backgroundColor: "#cce9cc",
                   transition: "background-color 0.3s",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#b3ddaa")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#cce9cc")
-                }
               >
                 ➕ Add Ingredient
               </button>
@@ -359,12 +551,6 @@ export default function UploadRecipePage() {
                   backgroundColor: "#ffe0b2",
                   transition: "background-color 0.3s",
                 }}
-                onMouseOver={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#ffd194")
-                }
-                onMouseOut={(e) =>
-                  (e.currentTarget.style.backgroundColor = "#ffe0b2")
-                }
               >
                 ➖ Remove Ingredient
               </button>
@@ -425,29 +611,35 @@ export default function UploadRecipePage() {
           {/* Submit Button */}
           <button
             type="submit"
+            disabled={loadingAI}
             style={{
               alignSelf: "flex-start",
-              backgroundColor: "#4CAF50",
+              backgroundColor: loadingAI ? "#ccc" : "#4CAF50",
               color: "#fff",
               border: "none",
               borderRadius: "4px",
-              cursor: "pointer",
+              cursor: loadingAI ? "not-allowed" : "pointer",
               fontSize: "1rem",
               padding: "0.5rem 1rem",
               transition: "background-color 0.3s",
             }}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.backgroundColor = "#43a047")
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.backgroundColor = "#4CAF50")
-            }
           >
-            Upload Recipe
+            {loadingAI ? "Estimating Price..." : "Upload Recipe"}
           </button>
 
           {/* Status Message */}
-          <p style={{ marginTop: "1rem", color: status.includes("✅") ? "green" : "red" }}>{status}</p>
+          {status && (
+            <p style={{ 
+              marginTop: "1rem", 
+              padding: "1rem",
+              borderRadius: "4px",
+              backgroundColor: status.includes("✅") ? "#e8f5e9" : "#ffebee",
+              color: status.includes("✅") ? "#2e7d32" : "#c62828",
+              border: `1px solid ${status.includes("✅") ? "#c8e6c9" : "#ffcdd2"}`
+            }}>
+              {status}
+            </p>
+          )}
         </form>
       </main>
     </div>
