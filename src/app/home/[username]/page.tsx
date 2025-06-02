@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import "./home.css";
 
 import { getSavedRecipesByUserId } from "@/lib/utils/Recipes/SavedRecipes";
@@ -90,7 +91,7 @@ export default function HomePage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="container">
+      <div className="home-container">
         {/* Sidebar Menu */}
         <div className="filters-column">
           <div style={{ display: "flex", alignItems: "center", marginBottom: "1em" }}>
@@ -180,24 +181,29 @@ export default function HomePage() {
             <p>No recipes to display.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {currentRecipes.map((recipe, index) => (
-                <div key={index} className="recipe-card">
-                  <h3>{recipe.name}</h3>
-                  <p>
-                    <strong>Ingredients:</strong>{" "}
-                    {recipe.ingredients.map((ing) => {
-                      // If ingredient is object like { quantity, name }
-                      if (typeof ing === "object" && ing !== null) {
-                        return `${ing.quantity || ""} ${ing.measurement || ""} ${ing.name || ""}`;
-                      }
-                      // If it's just a string (fallback)
-                      return ing;
-                    }).join(", ")}
-                  </p>
-                  <p>
-                    <strong>Steps:</strong> {recipe.steps.join(" → ")}
-                  </p>
-                </div>
+              {currentRecipes.map((recipe) => (
+                <Link
+                  key={recipe.recipeId}
+                  href={`/recipeTemplate/${recipe.recipeId}?username=${username}`}
+                  passHref
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  <div className="recipe-card" style={{ cursor: "pointer" }}>
+                    <h3>{recipe.name}</h3>
+                    <p>
+                      <strong>Ingredients:</strong>{" "}
+                      {recipe.ingredients.map((ing) => {
+                        if (typeof ing === "object" && ing !== null) {
+                          return `${ing.quantity || ""} ${ing.measurement || ""} ${ing.name || ""}`;
+                        }
+                        return ing;
+                      }).join(", ")}
+                    </p>
+                    <p>
+                      <strong>Steps:</strong> {recipe.steps.join(" → ")}
+                    </p>
+                  </div>
+                </Link>
               ))}
             </div>
           )}

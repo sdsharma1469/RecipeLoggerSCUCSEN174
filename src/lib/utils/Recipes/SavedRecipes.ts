@@ -24,12 +24,42 @@ export async function getSavedRecipesByUserId(userId: string): Promise<RecipeObj
 
       if (recipeSnap.exists()) {
         const data = recipeSnap.data();
-        recipeList.append({
-          createdAt: data.createdAt,
-          ingredients: data.ingredients,
-          steps: data.steps,
-          name: data.name,
-        });
+
+        const recipe: Recipe = {
+          recipeId, // ✅ Add this so the homepage can link correctly
+          name: data.name ?? '',
+          description: data.description ?? '',
+          ingredients: data.ingredients ?? [],
+          steps: data.steps ?? [],
+          tags: {
+            vegan: data.tags?.vegan ?? false,
+            vegetarian: data.tags?.vegetarian ?? false,
+            lactoseFree: data.tags?.lactoseFree ?? false,
+            halal: data.tags?.halal ?? false,
+            soy: data.tags?.soy ?? false,
+            peanuts: data.tags?.peanuts ?? false,
+          },
+          tools: {
+            knife: data.tools?.knife ?? false,
+            oven: data.tools?.oven ?? false,
+            airFryer: data.tools?.airFryer ?? false,
+            stainlessSteelPan: data.tools?.stainlessSteelPan ?? false,
+            kettle: data.tools?.kettle ?? false,
+            wok: data.tools?.wok ?? false,
+            smallPot: data.tools?.smallPot ?? false,
+            mediumPot: data.tools?.mediumPot ?? false,
+            largePot: data.tools?.largePot ?? false,
+          },
+          author: data.author ?? '',
+          createdAt: data.createdAt ?? '',
+          comments: data.comments ?? [],
+          rating: data.rating ?? [],
+          userDiff: data.userDiff ?? 0,
+          authorDiff: data.authorDiff ?? 0,
+          cost: data.cost ?? 0,
+        };
+
+        recipeList.append(recipe);
       }
     } catch (error) {
       console.warn(`⚠️ Skipping saved recipe ${recipeId}:`, error);
