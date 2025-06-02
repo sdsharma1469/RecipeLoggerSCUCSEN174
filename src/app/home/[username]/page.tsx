@@ -7,6 +7,7 @@ import "./home.css";
 import { getSavedRecipesByUserId } from "@/lib/utils/Recipes/SavedRecipes";
 import { getCreatedRecipesByUserId } from "@/lib/utils/Recipes/CreatedRecipes"; 
 import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
+import type { Recipe } from "@/types/Recipe";
 import { getAuth } from "firebase/auth";
 
 const isOwnPage = async (username: string) => {
@@ -18,7 +19,8 @@ const isOwnPage = async (username: string) => {
 };
 
 export default function HomePage() {
-  const { username } = useParams();
+  const params = useParams();
+  const username = params.username as string;
   const [activeTab, setActiveTab] = useState<"saved" | "my">("saved");
   const [currentRecipes, setCurrentRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
