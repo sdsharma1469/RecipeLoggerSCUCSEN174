@@ -389,47 +389,6 @@ const RecipeTemplate: React.FC = () => {
               <li style={{ fontSize: "1.1em" }} key={index}>{step}</li>
             ))}
           </ol>
-
-          <div style={{ marginTop: "2rem" }}>
-            <h2><strong>Estimated Macros Via Deepseek</strong></h2>
-            <button
-              onClick={handleFetchAICost}
-              disabled={loadingAI}
-              style={{
-                backgroundColor: loadingAI ? "#ccc" : "#4caf50",
-                color: "#fff",
-                border: "none",
-                padding: "0.5em 1em",
-                borderRadius: "4px",
-                cursor: loadingAI ? "not-allowed" : "pointer",
-                transition: "background-color 0.3s",
-                marginBottom: "1rem",
-              }}
-              onMouseOver={(e) => !loadingAI && (e.currentTarget.style.backgroundColor = "#43a047")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#4caf50")}
-            >
-              {loadingAI ? "Thinking..." : "🔄 Refresh Info"}
-            </button>
-            
-            {aiError && <p style={{ color: "red" }}>{aiError}</p>}
-            
-            {(totalCost || nutrients) && (
-              <div
-                style={{
-                  backgroundColor: "#f8f8f8",
-                  padding: "1em",
-                  borderRadius: "8px",
-                  border: "1px solid #ddd",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                {nutrients && Object.entries(nutrients).map(([key, value]) => (
-                  <p key={key}><strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}</p>
-                ))}
-              </div>
-            )}
-          </div>
         </div>        
 
         {/* Right Column with Rating + Difficulty + Add to Cart Button */}
@@ -455,10 +414,56 @@ const RecipeTemplate: React.FC = () => {
           <h3 style={{ fontSize: "1.1em" }}>From author: {recipe.authorDiff}/5</h3>
           <h3 style={{ fontSize: "1.1em" }}>From users: {recipe.userDiff}/5</h3>
 
+          <div style={{ fontSize: "1.2em", marginTop: "2rem", marginBottom: "1rem" }}>
+            <h2><strong>Load Deepseek Results:</strong></h2>
+            <button
+              onClick={handleFetchAICost}
+              disabled={loadingAI}
+              style={{
+                backgroundColor: loadingAI ? "#ccc" : "#4caf50",
+                color: "#fff",
+                border: "none",
+                padding: "0.5em 1em",
+                borderRadius: "4px",
+                cursor: loadingAI ? "not-allowed" : "pointer",
+                transition: "background-color 0.3s",
+                marginBottom: "1rem",
+                marginTop: "1rem"
+              }}
+              onMouseOver={(e) => !loadingAI && (e.currentTarget.style.backgroundColor = "#43a047")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#4caf50")}
+            >
+              {loadingAI ? "Thinking..." : "🔄 Refresh Info"}
+            </button>
+            
+            {aiError && <p style={{ color: "red" }}>{aiError}</p>}            
+          </div>
+
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Total Estimated Price</h2>
           <h3 style={{ fontSize: "1.1em" }}>{totalCost ? totalCost : "Please Fetch Price via Deepseek First"}</h3>
 
-          <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tags</h3>
+          <h3 style={{ fontSize: "1.2em", marginTop: "2rem", fontWeight: "bold" }}> Nutrients via Deepseek: </h3>
+          <h3 style={{ fontSize: "1.1em"}}>Disclaimer: Nutrition Facts generally have a limit of 20% variance and these are estimated. Please do not take these as 100% factual. We are not experts.</h3>
+          {(totalCost || nutrients) && (
+            <div
+              style={{
+                backgroundColor: "#f8f8f8",
+                padding: "1em",
+                borderRadius: "8px",
+                border: "1px solid #ddd",
+                display: "flex",
+                flexDirection: "column",
+                marginTop: "1rem"
+              }}
+            >
+              {nutrients && Object.entries(nutrients).map(([key, value]) => (
+                <p key={key}><strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {value}</p>
+              ))}
+            </div>
+          )}
+
+
+          <h3 style={{ fontSize: "1.2em", fontWeight: "bold", marginTop: "2rem" }}>Tags</h3>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3em" }}>
             {Object.values(recipe.tags).some(Boolean) ? (
               <>
@@ -474,7 +479,7 @@ const RecipeTemplate: React.FC = () => {
             )}
           </div>
 
-          <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Tools</h3>
+          <h3 style={{ fontSize: "1.2em", fontWeight: "bold", marginTop: "2rem" }}>Tools</h3>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3em" }}>
             {Object.values(recipe.tools).some(Boolean) ? (
               <>
