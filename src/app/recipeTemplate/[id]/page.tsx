@@ -444,7 +444,7 @@ const RecipeTemplate: React.FC = () => {
           <h3 style={{ fontSize: "1.1em" }}>{totalCost ? totalCost : "Please Fetch Price via Deepseek First"}</h3>
 
           <h3 style={{ fontSize: "1.2em", marginTop: "2rem", fontWeight: "bold" }}> Nutrients via Deepseek: </h3>
-          <h3 style={{ fontSize: "1.1em"}}>Disclaimer: Nutrition Facts generally have a limit of 20% variance and these are estimated. Please do not take these as 100% factual. We are not experts.</h3>
+          <h3 style={{ fontSize: "1.1em"}}>Disclaimer: Nutrition Facts generally have a limit of 20% variance and these are estimated. Please do not take these as 100% factual. We are not experts. There may be some larger errors which can be fixed by refreshing 1-2 more times. </h3>
           {(totalCost || nutrients) && (
             <div
               style={{
