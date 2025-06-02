@@ -129,13 +129,14 @@ const ExplorePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="container">
+      <div className="explore-container">
         <div className="main-content">
+          <div className="filter-title">Search via Recipe Name or User</div>
           <div className="search-filter-bar">
             <input
               className="recipe-search"
               type="text"
-              placeholder="Search recipes by name..."
+              placeholder="Search recipes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -185,7 +186,7 @@ const ExplorePage: React.FC = () => {
         </div>
 
         <div className="filters-column">
-          <div className="filter-title">Filters</div>
+          <div className="filter-title">Search via Diets or Tools</div>
           <input
             className="filter-search"
             type="text"
@@ -200,6 +201,7 @@ const ExplorePage: React.FC = () => {
             }}
           />
 
+          <div className="filter-title">Diets</div>
           <div className="filter-list">
             {visibleFilters.map((filter) => (
               <button
