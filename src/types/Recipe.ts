@@ -41,7 +41,7 @@ export type Recipe = {
   authorDiff: number;
   userDiff: number;
 
-  // ✅ Estimated price from AI
+  // AI Estimated Price
   price: number;
 
   // 🟡 Optional cost field (already used in some code)

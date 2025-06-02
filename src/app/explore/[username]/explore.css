@@ -45,8 +45,6 @@ body {
     padding: 1em;
     border: 2px solid #ccc;
     border-radius: 1em;
-    position: sticky;
-    top: 100px;
   }
   
   .search-filter-bar {

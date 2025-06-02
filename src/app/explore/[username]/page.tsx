@@ -176,7 +176,7 @@ const ExplorePage: React.FC = () => {
                         <div>Ingredients: {recipe.ingredients.length}</div>
                         {difficulty !== null && <div>Difficulty: {difficulty}/5</div>}
                       </div>
-                      <div className="price">Free</div>
+                      <div className="price"> {recipe.price ? `$${Number(recipe.price).toFixed(2)}` : "No Price Detected"} </div>
                     </div>
                   </div>
                 </Link>
