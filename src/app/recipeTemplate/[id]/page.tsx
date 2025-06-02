@@ -343,7 +343,7 @@ const RecipeTemplate: React.FC = () => {
     </div>
 
 
-      <div className="container">
+      <div className="recipe-container">
         <div className="left-column">
           <h2 style={{ fontSize: "1.8em", fontWeight: "bold" }}>{recipe.name}</h2>
           <h3 style={{ fontSize: "1.2em", fontWeight: "bold" }}>

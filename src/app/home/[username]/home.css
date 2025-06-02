@@ -20,7 +20,7 @@ body {
 }
 
 /* Container for both columns */
-.container {
+.home-container {
   display: flex;
   padding: 2em;
   gap: 2em;
