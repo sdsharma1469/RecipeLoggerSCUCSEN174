@@ -76,6 +76,7 @@ const RecipeTemplate: React.FC = () => {
   const [aiError, setAiError] = useState<string | null>(null); // Also added the Ai error states just in case
   const [nutrients, setNutrients] = useState<{ [key: string]: string } | null>(null);
   const [loadingAI, setLoadingAI] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [aiMacros, setAIMacros] = useState(null);
   const [aiPrice, setAIPrice] = useState(null);
     const [profileImage, setProfileImage] = useState<string>(
@@ -188,6 +189,18 @@ const RecipeTemplate: React.FC = () => {
       console.error("Error adding rating:", error);
       alert("Failed to submit rating.");
     }
+  };
+
+  // Handler: Copy URL
+  const handleCopy = () => {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000); // Reset after 2s
+      })
+      .catch((err) => {
+        console.error('Failed to copy URL:', err);
+      });
   };
 
   // Handler: Add Comment
@@ -474,6 +487,8 @@ const RecipeTemplate: React.FC = () => {
               ))}
             </div>
           )}
+          <p></p>
+          <button onClick={handleCopy} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">{copied ? 'URL Copied!' : 'Copy URL'}</button>
 
           <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Difficulty</h2>
           <h3 style={{ fontSize: "1.1em" }}>From author: {recipe.authorDiff}/5</h3>
