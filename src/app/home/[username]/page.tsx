@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import "./home.css";
-
 import { getSavedRecipesByUserId } from "@/lib/utils/Recipes/SavedRecipes";
 import { getCreatedRecipesByUserId } from "@/lib/utils/Recipes/CreatedRecipes"; 
 import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
@@ -315,19 +314,6 @@ export default function HomePage() {
               Post Recipe
             </a>
 
-            <div
-              onClick={() => alert("Delete Recipe clicked")}
-              style={{
-                padding: "0.5em",
-                cursor: "pointer",
-                borderRadius: "5px",
-                transition: "background-color 0.3s",
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d6ead6")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-            >
-              Delete Recipe
-            </div>
           </div>
         </div>
 

@@ -5,9 +5,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import "./explore.css";
 import type { Recipe } from "@/types/Recipe";
+import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
+import { doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
+import { db, storage } from "@/lib/firebase-client";
 
 const ExplorePage: React.FC = () => {
-  const { username } = useParams();
+  const params = useParams();
+  const username = params.username as string;
   const [filterStates, setFilterStates] = useState<Record<string, string>>({});
   const [recipes, setRecipes] = useState<Recipe[]>([]);
 
@@ -33,6 +37,9 @@ const ExplorePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterSearchQuery, setFilterSearchQuery] = useState('');
   const [filterSearchInput, setFilterSearchInput] = useState('');
+  const [profileImage, setProfileImage] = useState<string>(
+    "https://placehold.co/100"
+  );
 
   // Toggles our filter states from: none -> whitelisted -> blacklisted
   const toggleFilter = (name: string) => {
@@ -54,6 +61,27 @@ const ExplorePage: React.FC = () => {
       .replace(/([A-Z])/g, ' $1')     // insert space before capital letters
       .replace(/^./, str => str.toUpperCase()); // capitalize first letter
   };
+
+  // Function gets the image from the user logged in at the moment
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const uid = await getUserIdByUsername(username);
+        const userDoc = await getDoc(doc(db, "users", uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.profileImageUrl) {
+            setProfileImage(userData.profileImageUrl);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+  }, [username]);
 
   // Fetch our recipes from backend
   useEffect(() => {
@@ -121,7 +149,7 @@ const ExplorePage: React.FC = () => {
           <a href={`/explore/${username}`}>Explore</a> |
           <a href={username ? `/shoppingList/${username}` : "/shoppingList"}>Cart</a> |
           <img
-            src="https://placehold.co/100"
+            src={profileImage}
             alt="User Profile"
             style={{ borderRadius: '50%', width: '30px', height: '30px' }}
           />
@@ -158,7 +186,7 @@ const ExplorePage: React.FC = () => {
 
                     <div className="recipe-author">By: {recipe.author}</div>
 
-                    <img src="https://via.placeholder.com/600x200" alt={recipe.name} className="recipe-image"/>
+                    <img src={recipe.imageUrl} alt={recipe.name} className="recipe-image"/>
 
                     <div className="recipe-description">
                       {recipe.description ? recipe.description : 'No description available...'}
