@@ -4,8 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import "./home.css";
-import { deleteRecipeByRecipeIDandUserID } from "@/lib/utils/Recipes/DeleteRecipe"
-import { getCurrentUserId } from "@/lib/utils/UserHandling/getCurrUser";
 import { getSavedRecipesByUserId } from "@/lib/utils/Recipes/SavedRecipes";
 import { getCreatedRecipesByUserId } from "@/lib/utils/Recipes/CreatedRecipes"; 
 import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
@@ -156,26 +154,7 @@ export default function HomePage() {
             >
               Post Recipe
             </a>
-            <div
-              onClick={async () => {
-                try {
-                  await deleteRecipeByRecipeIDandUserID(getCurrentUserId()!, "1a218bf2-3ce0-4fca-9cd4-7d683191cf92")
-                } catch (error) {
-                  console.error("Error deleting recipe:", error)
-                  alert("Failed to delete recipe.")
-                }
-              }}
-              style={{
-                padding: "0.5em",
-                cursor: "pointer",
-                borderRadius: "5px",
-                transition: "background-color 0.3s",
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d6ead6")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-            >
-              Delete Recipe
-            </div>
+ 
           </div>
         </div>
 
