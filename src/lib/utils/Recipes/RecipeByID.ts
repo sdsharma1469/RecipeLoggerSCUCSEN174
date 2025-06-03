@@ -41,11 +41,14 @@ export async function fetchRecipeById(recipeId: string): Promise<Recipe> {
         smallPot: data.tools.smallPot,
         mediumPot: data.tools.mediumPot,
         largePot: data.tools.largePot,
+        grater: data.tools.grater,
       },
       authorDiff: data.authorDiff,
       userDiff: data.userDiff,
+      price: data.price,
       cost: data.cost,
       rating: data.rating,
+      imageUrl: data.imageUrl,
     };
 
     return recipe;

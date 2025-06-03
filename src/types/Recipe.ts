@@ -35,6 +35,7 @@ export type Recipe = {
     smallPot: boolean;
     mediumPot: boolean;
     largePot: boolean;
+    grater: boolean;
   };
 
   rating: number[];
@@ -43,6 +44,8 @@ export type Recipe = {
 
   // AI Estimated Price
   price: number;
+
+  imageUrl: string;
 
   // 🟡 Optional cost field (already used in some code)
   cost?: number;
