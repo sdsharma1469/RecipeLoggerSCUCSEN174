@@ -158,7 +158,7 @@ const ExplorePage: React.FC = () => {
 
                     <div className="recipe-author">By: {recipe.author}</div>
 
-                    <img src="https://via.placeholder.com/600x200" alt={recipe.name} className="recipe-image"/>
+                    <img src={recipe.imageUrl} alt={recipe.name} className="recipe-image"/>
 
                     <div className="recipe-description">
                       {recipe.description ? recipe.description : 'No description available...'}
