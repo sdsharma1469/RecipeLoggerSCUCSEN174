@@ -4,6 +4,10 @@ import React, { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import type { Recipe } from "@/types/Recipe";
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
+import { deleteRecipeByRecipeIDandUserID } from "@/lib/utils/Recipes/DeleteRecipe"
+import { getCurrentUserId } from "@/lib/utils/UserHandling/getCurrUser";
+import { getAuthorIdByRecipeId } from "@/lib/utils/Recipes/getRecipeAuthor";
+
 import {
   Timestamp,
   doc,
@@ -544,6 +548,46 @@ const RecipeTemplate: React.FC = () => {
           >
             Add to Shopping List
           </button>
+           <button
+              onClick={async () => {
+              try {
+                const currentUserId = getCurrentUserId();
+                const authorId = await getAuthorIdByRecipeId(recipe.recipeId);
+
+                if (currentUserId === authorId) {
+                  const success = await deleteRecipeByRecipeIDandUserID(currentUserId!, recipe.recipeId);
+
+                  if (success) {
+                    alert("Recipe deleted successfully.");
+                    // optionally refresh or redirect
+                  } else {
+                    alert("Recipe not deleted.");
+                  }
+                } else {
+                  alert("You are not the author of that recipe.");
+                }
+              } catch (error) {
+                console.error("Error deleting recipe:", error);
+                alert("Failed to delete recipe.");
+              }
+
+              }}
+              style={{
+                marginTop: "1rem",
+                padding: "0.5rem 1rem",
+                backgroundColor: "#cce9cc",
+                color: "black",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "1rem",
+                width: "100%",
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d6ead6")}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#cce9cc")}
+            >
+              Delete Recipe
+          </button>
         </div>
       </div>
 
@@ -555,7 +599,9 @@ const RecipeTemplate: React.FC = () => {
           ))}
         </ol>
       </div>
+
     </div>
+    
   );
 };
 

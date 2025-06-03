@@ -4,8 +4,6 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import "./home.css";
-import { deleteRecipeByRecipeIDandUserID } from "@/lib/utils/Recipes/DeleteRecipe"
-import { getCurrentUserId } from "@/lib/utils/UserHandling/getCurrUser";
 import { getSavedRecipesByUserId } from "@/lib/utils/Recipes/SavedRecipes";
 import { getCreatedRecipesByUserId } from "@/lib/utils/Recipes/CreatedRecipes"; 
 import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
@@ -315,7 +313,7 @@ export default function HomePage() {
             >
               Post Recipe
             </a>
-            
+
           </div>
         </div>
 
