@@ -10,6 +10,9 @@ import { getCreatedRecipesByUserId } from "@/lib/utils/Recipes/CreatedRecipes";
 import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
 import type { Recipe } from "@/types/Recipe";
 import { getAuth } from "firebase/auth";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
+import { db, storage } from "@/lib/firebase-client";
 
 const isOwnPage = async (username: string) => {
   const auth = getAuth();
@@ -26,8 +29,30 @@ export default function HomePage() {
   const [currentRecipes, setCurrentRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [profileImage, setProfileImage] = useState<string>(
-    "https://placehold.co/100 "
+    "https://placehold.co/100"
   );
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+
+  // Load user's profile image on component mount
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const uid = await getUserIdByUsername(username);
+        const userDoc = await getDoc(doc(db, "users", uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.profileImageUrl) {
+            setProfileImage(userData.profileImageUrl);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+  }, [username]);
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -51,18 +76,131 @@ export default function HomePage() {
     fetchRecipes();
   }, [activeTab, username]);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && ["image/jpeg", "image/png"].includes(file.type)) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (typeof event.target?.result === "string") {
-          setProfileImage(event.target.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    } else {
+    if (!file) return;
+
+    console.log("📁 File selected:", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      sizeInMB: (file.size / (1024 * 1024)).toFixed(2)
+    });
+
+    // Check if user is on their own page
+    try {
+      const isOwner = await isOwnPage(username);
+      console.log("👤 Is owner check:", isOwner);
+      if (!isOwner) {
+        alert("⚠️ You can only update your own profile picture.");
+        return;
+      }
+    } catch (error) {
+      console.error("❌ Error checking ownership:", error);
+      alert("❌ Error verifying permissions. Please try again.");
+      return;
+    }
+
+    if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
+      console.log("❌ Invalid file type:", file.type);
       alert("Please upload a .jpg or .png file.");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      console.log("❌ File too large:", file.size);
+      alert("File size must be less than 2MB.");
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+      
+      console.log("🔐 Current user:", currentUser?.uid);
+      
+      if (!currentUser) {
+        alert("You must be logged in to upload a profile picture.");
+        setUploadingImage(false);
+        return;
+      }
+
+      // Upload to Firebase Storage
+      const fileName = `profile_${Date.now()}.${file.type.split('/')[1]}`;
+      const storagePath = `users/${currentUser.uid}/profile/${fileName}`;
+      console.log("📤 Uploading to storage path:", storagePath);
+      
+      const storageRef = ref(storage, storagePath);
+      
+      // Upload file
+      console.log("⬆️ Starting upload...");
+      const snapshot = await uploadBytes(storageRef, file);
+      console.log("✅ Upload completed:", snapshot.metadata);
+      
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log("🔗 Download URL obtained:", downloadURL);
+
+      // Update user document in Firestore
+      console.log("💾 Updating Firestore document...");
+      const userDocRef = doc(db, "users", currentUser.uid);
+      
+      // Check if document exists first
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        console.log("📝 User document doesn't exist, creating new one...");
+        // Create new user document
+        await setDoc(userDocRef, {
+          uid: currentUser.uid,
+          email: currentUser.email || "",
+          username: username, // Use the username from URL params
+          profileImageUrl: downloadURL,
+          profileImagePath: storagePath,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+        console.log("✅ New user document created with profile image");
+      } else {
+        // Document exists, update it
+        await updateDoc(userDocRef, {
+          profileImageUrl: downloadURL,
+          profileImagePath: storagePath,
+          updatedAt: new Date()
+        });
+        console.log("✅ Existing user document updated");
+      }
+
+      // Update local state
+      setProfileImage(downloadURL);
+      
+      alert("✅ Profile picture updated successfully!");
+      
+    } catch (error: any) {
+      console.error("❌ Full error details:", {
+        message: error.message,
+        code: error.code,
+        stack: error.stack,
+        fullError: error
+      });
+      
+      let errorMessage = "Failed to upload profile picture. ";
+      
+      if (error.code === 'storage/unauthorized') {
+        errorMessage += "Permission denied. Check your Firestore security rules.";
+      } else if (error.code === 'storage/canceled') {
+        errorMessage += "Upload was canceled.";
+      } else if (error.code === 'storage/unknown') {
+        errorMessage += "Unknown error occurred.";
+      } else if (error.code === 'permission-denied') {
+        errorMessage += "Permission denied. Check your Firestore rules.";
+      } else {
+        errorMessage += `Error: ${error.message}`;
+      }
+      
+      alert("❌ " + errorMessage);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -76,7 +214,7 @@ export default function HomePage() {
           <a href={`/explore/${username}`}>Explore</a> |
           <a href={username ? `/shoppingList/${username}` : "/shoppingList"}>Cart</a> |
           <img
-            src="https://placehold.co/100 "
+            src={profileImage}
             alt="User Profile"
             style={{
               borderRadius: "50%",
@@ -84,6 +222,7 @@ export default function HomePage() {
               height: "30px",
               border: "2px solid #4caf50",
               boxShadow: "0 0 5px rgba(0,0,0,0.2)",
+              objectFit: "cover"
             }}
           />
           <span>{username}</span>
@@ -95,7 +234,7 @@ export default function HomePage() {
         {/* Sidebar Menu */}
         <div className="filters-column">
           <div style={{ display: "flex", alignItems: "center", marginBottom: "1em" }}>
-            <label htmlFor="profile-upload" style={{ cursor: "pointer" }}>
+            <label htmlFor="profile-upload" style={{ cursor: "pointer", position: "relative" }}>
               <img
                 src={profileImage}
                 alt="Profile"
@@ -105,10 +244,30 @@ export default function HomePage() {
                   borderRadius: "50%",
                   objectFit: "cover",
                   border: "2px solid #ddd",
+                  opacity: uploadingImage ? 0.6 : 1
                 }}
               />
+              {uploadingImage && (
+                <div style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  color: "#666",
+                  fontSize: "12px"
+                }}>
+                  Uploading...
+                </div>
+              )}
             </label>
-            <input id="profile-upload" type="file" accept=".jpg" onChange={handleFileUpload} style={{ display: "none" }} />
+            <input 
+              id="profile-upload" 
+              type="file" 
+              accept=".jpg,.jpeg,.png" 
+              onChange={handleFileUpload} 
+              style={{ display: "none" }}
+              disabled={uploadingImage}
+            />
             <span style={{ marginLeft: "1em", fontSize: "1.2em" }}>{username}</span>
           </div>
 
