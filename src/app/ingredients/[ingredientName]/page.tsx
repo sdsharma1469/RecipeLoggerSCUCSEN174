@@ -43,6 +43,8 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
   const [username, setUsername] = useState<string>(passedUsername || "Guest");
   const [ingredientData, setIngredientData] = useState<any>(null);
   const [ingredientImage, setIngredientImage] = useState<string | null>(null);
+  const [imageLoading, setImageLoading] = useState<boolean>(true);
+  const [imageTimeout, setImageTimeout] = useState<boolean>(false);
   const [priceEstimate, setPriceEstimate] = useState<string>("Not fetched yet");
   const [macroEstimate, setMacroEstimate] = useState<{ protein: string; carbs: string; fat: string } | null>(null);
   const [aiStreamText, setAiStreamText] = useState<string>("");
@@ -99,10 +101,25 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
 
     async function getSpoonacularImage() {
       try {
+        setImageLoading(true);
+        setImageTimeout(false);
+        
+        // Set up timeout
+        const timeoutId = setTimeout(() => {
+          setImageTimeout(true);
+          setImageLoading(false);
+        }, 8000);
+
         const data = await fetchIngredientImage(decodedIngredientName);
+        
+        // Clear timeout if image loads successfully
+        clearTimeout(timeoutId);
+        
         setIngredientImage(data?.image ?? null);
+        setImageLoading(false);
       } catch (error) {
         console.error("Error fetching image:", error);
+        setImageLoading(false);
       }
     }
 
@@ -199,10 +216,14 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
           <h1 style={{ fontSize: "1.5em", fontWeight: "bold", marginBottom: "1.5rem" }}>{decodedIngredientName}</h1>
 
           <div id="ingredient-image" style={{ marginBottom: "1.5rem" }}>
-            {ingredientImage ? (
+            {imageLoading ? (
+              <p>Loading image...</p>
+            ) : imageTimeout ? (
+              <p>Image failed to load (timeout after 8 seconds)</p>
+            ) : ingredientImage ? (
               <img src={ingredientImage} alt={decodedIngredientName} style={{ width: "200px", borderRadius: "10px" }} />
             ) : (
-              <p>Loading image...</p>
+              <p>No image available</p>
             )}
           </div>
 
