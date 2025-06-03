@@ -6,6 +6,7 @@ import type { Recipe } from "@/types/Recipe";
 import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
 import {
   Timestamp,
+  serverTimestamp,
   doc,
   updateDoc,
   arrayUnion,
@@ -64,6 +65,8 @@ const RecipeTemplate: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showStars, setShowStars] = useState(false);
+  const [showCommentSec, setShowCommentSec] = useState(false);
+  const [newComment, setNewComment] = useState("");
   const [totalCost, setTotalCost] = useState<string | null>(null); // Added the total cost estimated here
   const [aiError, setAiError] = useState<string | null>(null); // Also added the Ai error states just in case
   const [nutrients, setNutrients] = useState<{ [key: string]: string } | null>(null);
@@ -155,6 +158,38 @@ const RecipeTemplate: React.FC = () => {
     } catch (error) {
       console.error("Error adding rating:", error);
       alert("Failed to submit rating.");
+    }
+  };
+
+  // Handler: Add Comment
+  const handleAddComment = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      alert("Please log in to rate.");
+      return;
+    }
+
+    try {
+      const docSnap = await getDoc(doc(db, "Recipes", id));
+      if (!newComment.trim()) return;
+      if (docSnap.exists()) {
+        //const data = docSnap.data();
+        //const existingComments = data.comments || [];
+        console.log(newComment);
+        await updateDoc(doc(db, "Recipes", id), {
+          comments: arrayUnion({
+            author: username,
+            comment: newComment,
+            time: Timestamp.now(),
+          }),
+        });
+        alert(`Comment posted.`);
+        setNewComment("");
+        setShowCommentSec(false);
+    }
+    } catch (error) {
+      console.error("Error adding comment.", error);
+      alert("Failed to submit comment.");
     }
   };
 
@@ -396,7 +431,7 @@ const RecipeTemplate: React.FC = () => {
         <div className="right-column">
           <div className="flex text-yellow-500">
             {stars.map((star, index) => (
-              <div style={{ fontSize: "1.6em" }} key={index}>
+              <div style={{ fontSize: "2.5em" }} key={index}>
                 {star === 'full' ? '★' : star === 'half' ? '⯪' : '☆'}
               </div>
             ))}
@@ -549,11 +584,24 @@ const RecipeTemplate: React.FC = () => {
 
       <div className="comment-section">
         <h2 style={{ fontSize: "1.2em", fontWeight: "bold" }}>Comments:</h2>
-        <ol>
+        <button style={{marginBottom: "0.4em"}} onClick={() => setShowCommentSec((prev) => !prev)} className="bg-blue-500 text-white px-4 py-2 rounded">Leave a Comment</button>
+          {showCommentSec && (
+            <div className="mt-4">
+              <textarea className="w-full border p-2 rounded" placeholder="Write your comment..." value={newComment} onChange={(e) => setNewComment(e.target.value)}/>
+              <button className="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600" onClick={handleAddComment}>Submit</button>
+            </div>
+          )}
+        <ul className="space-y-4">
           {recipe.comments.map((comment, index) => (
-            <li style={{ fontSize: "1.1em" }} key={index}>{comment}</li>
+            <li key={index}>
+              <div className="border border-gray-300 rounded-md p-3 bg-gray-50">
+                <p className="font-bold">{comment.author}</p>
+                <p>{comment.time?.toDate?.().toLocaleDateString() || ""}</p>
+                <p>{comment.comment}</p>
+              </div>
+            </li>
           ))}
-        </ol>
+        </ul>
       </div>
     </div>
   );

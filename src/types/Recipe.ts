@@ -14,7 +14,11 @@ export type Recipe = {
   }>;
 
   steps: string[];
-  comments: string[];
+  comments: Array<{
+    author: string;
+    comment: string;
+    time: Timestamp;
+  }>;
 
   tags: {
     halal: boolean;
