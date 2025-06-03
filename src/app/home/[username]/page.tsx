@@ -315,26 +315,7 @@ export default function HomePage() {
             >
               Post Recipe
             </a>
-            <div
-              onClick={async () => {
-                try {
-                  await deleteRecipeByRecipeIDandUserID(getCurrentUserId()!, "1a218bf2-3ce0-4fca-9cd4-7d683191cf92")
-                } catch (error) {
-                  console.error("Error deleting recipe:", error)
-                  alert("Failed to delete recipe.")
-                }
-              }}
-              style={{
-                padding: "0.5em",
-                cursor: "pointer",
-                borderRadius: "5px",
-                transition: "background-color 0.3s",
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d6ead6")}
-              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-            >
-              Delete Recipe
-            </div>
+            
           </div>
         </div>
 
