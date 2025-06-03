@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase-client";
+import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
 
 export default function ShoppingListPage() {
   const [cartItems, setCartItems] = useState<
@@ -14,6 +15,9 @@ export default function ShoppingListPage() {
     }>
   >([]);
   const [username, setUsername] = useState<string>("Guest");
+    const [profileImage, setProfileImage] = useState<string>(
+      "https://placehold.co/100"
+    );
 
   const searchParams = useSearchParams();
 
@@ -40,6 +44,27 @@ export default function ShoppingListPage() {
     };
     fetchCart();
   }, []);
+
+    // Function gets the image from the user logged in at the moment
+    useEffect(() => {
+      const loadUserProfile = async () => {
+        try {
+          const uid = await getUserIdByUsername(username);
+          const userDoc = await getDoc(doc(db, "users", uid));
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.profileImageUrl) {
+              setProfileImage(userData.profileImageUrl);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load user profile:", error);
+        }
+      };
+  
+      loadUserProfile();
+    }, [username]);
 
   const handleCheckIngredient = async (
     recipeIndex: number,
@@ -102,7 +127,7 @@ export default function ShoppingListPage() {
           </a>{" "}
           |{" "}
           <img
-            src="https://placehold.co/100 "
+            src={profileImage}
             alt="User Profile"
             style={{
               borderRadius: "50%",
@@ -112,7 +137,7 @@ export default function ShoppingListPage() {
               boxShadow: "0 0 5px rgba(0,0,0,0.2)",
             }}
           />
-          <span style={{ fontWeight: "bold", marginLeft: "0.5em" }}>{username}</span>
+          <span style={{ marginLeft: "0.5em" }}>{username}</span>
         </div>
       </div>
 

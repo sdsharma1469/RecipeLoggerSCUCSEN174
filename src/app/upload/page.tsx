@@ -5,6 +5,7 @@ import { Timestamp } from "firebase/firestore";
 import { Recipe } from "@/lib/types/Recipe";
 import "./home.css";
 import { useEffect } from "react";
+import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
 
 // Firebase imports
 import { auth, storage } from "@/lib/firebase-client"; // Added storage import
@@ -28,6 +29,9 @@ export default function UploadRecipePage() {
   const [creatorRating, setCreatorRating] = useState(0);
   const [difficulty, setDifficulty] = useState(1);
   const [estimatedPrice, setEstimatedPrice] = useState(0);
+    const [profileImage, setProfileImage] = useState<string>(
+      "https://placehold.co/100"
+    );
 
   // Image upload states
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -85,6 +89,27 @@ export default function UploadRecipePage() {
       }
     };
   }, []);
+
+  // Function gets the image from the user logged in at the moment
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const uid = await getUserIdByUsername(username);
+        const userDoc = await getDoc(doc(db, "users", uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.profileImageUrl) {
+            setProfileImage(userData.profileImageUrl);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+  }, [username]);
 
   React.useEffect(() => {
     const firebaseAuth = getAuth();
@@ -426,7 +451,7 @@ IMPORTANT: Respond with ONLY a number (example: 15.75). No dollar signs, no text
           <a href={`/explore/${username}`}>Explore</a> |
           <a href={`/shoppingList/${username}`}>Cart</a> |
           <img
-            src="https://placehold.co/100" 
+            src={profileImage} 
             alt="User Profile"
             style={{
               borderRadius: "50%",
