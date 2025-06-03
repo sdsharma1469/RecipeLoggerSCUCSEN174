@@ -24,10 +24,11 @@ body {
 }
 
 .recipe-image {
-    width: 35%;
+    width: 80%;
+    max-width:600px;
     border-radius: 10px;
-    margin-top: 0.5em;
-    margin-bottom: 0.5em;
+    margin-bottom: 1em;
+    height: auto;
 }
 
 .left-column {
