@@ -14,6 +14,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase-client";
 import { fetchIngredientData } from "@/lib/utils/Ingredients/ingredientDataFetch";
 import { fetchIngredientImage } from "@/lib/utils/Ingredients/spoonacularImageFetch";
+import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
 import "./ingredients.css";
 
 // Declare Puter global types
@@ -50,6 +51,9 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
   const [aiStreamText, setAiStreamText] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [profileImage, setProfileImage] = useState<string>(
+    "https://placehold.co/100"
+  );
 
   // Load Puter script as we can't load it in normally without usual <script> support in jsx
   useEffect(() => {
@@ -68,6 +72,27 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
       document.body.removeChild(script);
     };
   }, []);
+
+  // Function gets the image from the user logged in at the moment
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const uid = await getUserIdByUsername(username);
+        const userDoc = await getDoc(doc(db, "users", uid));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          if (userData.profileImageUrl) {
+            setProfileImage(userData.profileImageUrl);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+      }
+    };
+
+    loadUserProfile();
+  }, [username]);
 
   // Fetch username from Firebase
   useEffect(() => {
@@ -206,7 +231,7 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
           <a href={username ? `/home/${username}` : "/home"}>Home</a> |
           <a href={username ? `/explore/${username}` : "/explore"}>Explore</a> |
           <a href={username ? `/shoppingList/${username}` : "/shoppingList"}>Cart</a> |
-          <img src="https://placehold.co/100" alt="User Profile" style={{ borderRadius: "50%", width: "30px", height: "30px" }}/>
+          <img src={profileImage} alt="User Profile" style={{ borderRadius: "50%", width: "30px", height: "30px" }}/>
           <span>{username}</span>
         </div>
       </div>
