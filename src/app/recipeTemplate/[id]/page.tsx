@@ -7,6 +7,7 @@ import { fetchRecipeById } from "@/lib/utils/Recipes/RecipeByID";
 import { deleteRecipeByRecipeIDandUserID } from "@/lib/utils/Recipes/DeleteRecipe"
 import { getCurrentUserId } from "@/lib/utils/UserHandling/getCurrUser";
 import { getAuthorIdByRecipeId } from "@/lib/utils/Recipes/getRecipeAuthor";
+import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
 
 import {
   Timestamp,
@@ -74,6 +75,9 @@ const RecipeTemplate: React.FC = () => {
   const [loadingAI, setLoadingAI] = useState(false);
   const [aiMacros, setAIMacros] = useState(null);
   const [aiPrice, setAIPrice] = useState(null);
+    const [profileImage, setProfileImage] = useState<string>(
+      "https://placehold.co/100"
+    );
 
   // Load Puter script as we can't load it in normally without usual <script> support in jsx
   useEffect(() => {
@@ -92,6 +96,27 @@ const RecipeTemplate: React.FC = () => {
       document.body.removeChild(script);
     };
   }, []);
+
+    // Function gets the image from the user logged in at the moment
+    useEffect(() => {
+      const loadUserProfile = async () => {
+        try {
+          const uid = await getUserIdByUsername(username);
+          const userDoc = await getDoc(doc(db, "users", uid));
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.profileImageUrl) {
+              setProfileImage(userData.profileImageUrl);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load user profile:", error);
+        }
+      };
+  
+      loadUserProfile();
+    }, [username]);
 
   // Fetch recipe by ID and calculate average rating
   useEffect(() => {
@@ -337,7 +362,7 @@ const RecipeTemplate: React.FC = () => {
           Cart
         </a> |
         <img
-          src="https://placehold.co/100"
+          src={profileImage}
           alt="User Profile"
           style={{ borderRadius: '50%', width: '30px', height: '30px' }}
           onClick={() => console.log("Profile image clicked. Username:", username)}
@@ -354,7 +379,7 @@ const RecipeTemplate: React.FC = () => {
             Submitted by {recipe.author} on {createdAtDate?.toLocaleDateString() ?? 'Unknown date'}
           </h3>
           <img
-            src="https://media.istockphoto.com/id/898671450/photo/bunch-of-ripe-bananas-and-apples-isolated-on-a-white-background.jpg?s=612x612&w=0&k=20&c=NLqbC3xJJIKqqciKcWFg57WXDpoVOtKMgGaixYUT8ys= "
+            src={recipe.imageUrl}
             alt={recipe.name}
             className="recipe-image"
           />
