@@ -49,6 +49,7 @@ export async function getSavedRecipesByUserId(userId: string): Promise<RecipeObj
             smallPot: data.tools?.smallPot ?? false,
             mediumPot: data.tools?.mediumPot ?? false,
             largePot: data.tools?.largePot ?? false,
+            grater: data.tools?.grater ?? false,
           },
           author: data.author ?? '',
           createdAt: data.createdAt ?? '',
@@ -57,6 +58,7 @@ export async function getSavedRecipesByUserId(userId: string): Promise<RecipeObj
           userDiff: data.userDiff ?? 0,
           authorDiff: data.authorDiff ?? 0,
           cost: data.cost ?? 0,
+          price: data.cost ?? 0,
         };
 
         recipeList.append(recipe);

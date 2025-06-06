@@ -1,3 +1,5 @@
+// This is the recipe template page where we used a template screen to fill in all dynamic details for a recipe. This loads and renders the recipe page with all needed information and deepseek integration
+
 "use client";
 
 import React, { useState, useEffect } from "react";

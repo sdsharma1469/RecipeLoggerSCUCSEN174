@@ -1,11 +1,7 @@
+// IngredientPage shows info about a single ingredient using deepseek integration and api's from a variety of sources
+
 "use client";
 
-// IngredientPage shows info about a single ingredient:
-// 1. Image (Spoonacular)
-// 2. Calories (USDA API)
-// 3. Price (from DeepSeek via Puter.js)
-// 4. Macros (from DeepSeek via Puter.js)
-// 5. External link to Amazon Fresh search
 
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
@@ -17,7 +13,7 @@ import { fetchIngredientImage } from "@/lib/utils/Ingredients/spoonacularImageFe
 import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
 import "./ingredients.css";
 
-// Declare Puter global types
+// Declare Puter global types so typescript doesn't return a bunch of errors
 declare global {
   interface Window {
     puter: {
@@ -36,6 +32,7 @@ declare global {
   }
 }
 
+// This is the main function for exporting out the ingredient page with parameters taken in addition to the ingredient name given the current routing
 export default function IngredientPage({ params }: { params: { ingredientName: string } }) {
   const decodedIngredientName = decodeURIComponent(params.ingredientName);
   const searchParams = useSearchParams();
@@ -124,6 +121,7 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
       }
     }
 
+    // Performs the spoonacular function to set the image with appropriate timeouts if needed
     async function getSpoonacularImage() {
       try {
         setImageLoading(true);
@@ -164,6 +162,7 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
       return;
     }
 
+    // With appropriate setup, we setup the prompt here and calculate the estimated cost and macros via deepseek with the given ingredient name decoded from url
     try {
       const outputDiv = document.getElementById("ai-output");
       if (outputDiv) outputDiv.innerHTML = "";
@@ -177,6 +176,7 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
         max_tokens: 100
       });
 
+      // Initializing the full text here so when chatResponse it sent in parts we can check if it exists and concatenate a larger full file
       let fullText = "";
       for await (const part of chatResponse) {
         if (part?.text) {
@@ -185,6 +185,7 @@ export default function IngredientPage({ params }: { params: { ingredientName: s
         }
       }
 
+      // With full text of the response we clean out the full text by elminating uneeded formating and then parse as a JSON to get the required info we want
       const cleaned = fullText.match(/{[\s\S]*}/)?.[0];
       if (cleaned) {
         const result = JSON.parse(cleaned);

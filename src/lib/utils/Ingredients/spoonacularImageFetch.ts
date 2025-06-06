@@ -1,3 +1,5 @@
+// This file ensures that we get the Spoonacular data from its API key mostly for the image and with a splicing feature to attempt getting the right image at all costs
+
 const SPOONACULAR_API_KEY = process.env.NEXT_PUBLIC_SPOONACULAR_API_KEY;
 
 async function searchSpoonacularIngredient(query: string) {
