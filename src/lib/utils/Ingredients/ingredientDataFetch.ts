@@ -1,3 +1,5 @@
+// This page ensures that we collect the data from the USDA API key and send it back with an object of the most relevant data that was found
+
 const API_KEY = process.env.NEXT_PUBLIC_USDA_API_KEY;
 
 export async function fetchIngredientData(ingredientName: string) {

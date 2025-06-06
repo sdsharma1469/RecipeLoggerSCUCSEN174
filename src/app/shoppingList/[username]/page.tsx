@@ -14,12 +14,14 @@ export default function ShoppingListPage() {
       ingredients: Array<{ name: string; quantity: number; checked: boolean }>;
     }>
   >([]);
-  const [username, setUsername] = useState<string>("Guest");
+  
+  const searchParams = useSearchParams();
+  const passedUsername = searchParams.get("username");
+  
+  const [username, setUsername] = useState<string>(passedUsername || "Guest");
     const [profileImage, setProfileImage] = useState<string>(
       "https://placehold.co/100"
     );
-
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const fetchCart = async () => {

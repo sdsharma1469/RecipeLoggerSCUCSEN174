@@ -1,3 +1,5 @@
+// This is the explore page in which all recipes are displayed and can be searched for using filters and by username or recipe titles
+
 'use client'
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -6,9 +8,10 @@ import { useParams } from "next/navigation";
 import "./explore.css";
 import type { Recipe } from "@/types/Recipe";
 import { getUserIdByUsername } from "@/lib/utils/UserHandling/IdbyUsername";
-import { doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
-import { db, storage } from "@/lib/firebase-client";
+import { doc, getDoc } from "firebase/firestore";
+import { db, } from "@/lib/firebase-client";
 
+// Main explore page done all within here 
 const ExplorePage: React.FC = () => {
   const params = useParams();
   const username = params.username as string;
