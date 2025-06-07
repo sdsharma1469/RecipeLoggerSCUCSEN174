@@ -13,6 +13,11 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
 import { db, storage } from "@/lib/firebase-client";
 
+/**
+ * Helper function to check if the current authenticated user owns the profile page
+ * @param username - The username from the URL parameters
+ * @returns Promise<boolean> - True if current user owns this profile page
+ */
 const isOwnPage = async (username: string) => {
   const auth = getAuth();
   const currentUser = auth.currentUser;
@@ -21,24 +26,38 @@ const isOwnPage = async (username: string) => {
   return currentUser.uid === ownerUid;
 };
 
+/**
+ * HomePage Component - Main user profile page displaying saved and created recipes
+ * Features:
+ * - Tab switching between saved and created recipes
+ * - Profile image upload functionality
+ * - Recipe list display with navigation
+ * - User authentication checks for ownership permissions
+ */
 export default function HomePage() {
+  // Extract username from URL parameters
   const params = useParams();
   const username = params.username as string;
-  const [activeTab, setActiveTab] = useState<"saved" | "my">("saved");
-  const [currentRecipes, setCurrentRecipes] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [profileImage, setProfileImage] = useState<string>(
-    "https://placehold.co/100"
-  );
-  const [uploadingImage, setUploadingImage] = useState<boolean>(false);
+  
+  // State management for component functionality
+  const [activeTab, setActiveTab] = useState<"saved" | "my">("saved"); // Current active tab
+  const [currentRecipes, setCurrentRecipes] = useState<Recipe[]>([]); // List of recipes to display
+  const [loading, setLoading] = useState<boolean>(true); // Loading state for recipes
+  const [profileImage, setProfileImage] = useState<string>("https://placehold.co/100"); // User's profile image URL
+  const [uploadingImage, setUploadingImage] = useState<boolean>(false); // Upload progress state
 
-  // Load user's profile image on component mount
+  /**
+   * Effect: Load user's profile image when component mounts or username changes
+   * Fetches user document from Firestore to get existing profile image
+   */
   useEffect(() => {
     const loadUserProfile = async () => {
       try {
+        // Get user ID from username and fetch user document
         const uid = await getUserIdByUsername(username);
         const userDoc = await getDoc(doc(db, "users", uid));
         
+        // If user document exists and has profile image, update state
         if (userDoc.exists()) {
           const userData = userDoc.data();
           if (userData.profileImageUrl) {
@@ -53,15 +72,20 @@ export default function HomePage() {
     loadUserProfile();
   }, [username]);
 
+  /**
+   * Effect: Fetch recipes based on active tab and username
+   * Loads either saved recipes or created recipes depending on current tab
+   */
   useEffect(() => {
     const fetchRecipes = async () => {
       setLoading(true);
       try {
+        // Get user ID and fetch appropriate recipe list
         const uid = await getUserIdByUsername(username);
         const recipeList =
           activeTab === "saved"
-            ? await getSavedRecipesByUserId(uid)
-            : await getCreatedRecipesByUserId(uid);
+            ? await getSavedRecipesByUserId(uid) // Fetch saved recipes
+            : await getCreatedRecipesByUserId(uid); // Fetch created recipes
 
         setCurrentRecipes(recipeList.toArray());
       } catch (err) {
@@ -73,12 +97,18 @@ export default function HomePage() {
     };
 
     fetchRecipes();
-  }, [activeTab, username]);
+  }, [activeTab, username]); // Re-run when tab or username changes
 
+  /**
+   * Handle profile image file upload
+   * Includes validation, Firebase Storage upload, and Firestore document update
+   * @param e - File input change event
+   */
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Log file details for debugging
     console.log("📁 File selected:", {
       name: file.name,
       type: file.type,
@@ -86,7 +116,7 @@ export default function HomePage() {
       sizeInMB: (file.size / (1024 * 1024)).toFixed(2)
     });
 
-    // Check if user is on their own page
+    // Permission check: Only allow users to update their own profile
     try {
       const isOwner = await isOwnPage(username);
       console.log("👤 Is owner check:", isOwner);
@@ -100,21 +130,25 @@ export default function HomePage() {
       return;
     }
 
+    // File type validation - only allow common image formats
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) {
       console.log("❌ Invalid file type:", file.type);
       alert("Please upload a .jpg or .png file.");
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+    // File size validation - 2MB limit
+    if (file.size > 2 * 1024 * 1024) {
       console.log("❌ File too large:", file.size);
       alert("File size must be less than 2MB.");
       return;
     }
 
+    // Start upload process
     setUploadingImage(true);
 
     try {
+      // Get current authenticated user
       const auth = getAuth();
       const currentUser = auth.currentUser;
       
@@ -126,34 +160,35 @@ export default function HomePage() {
         return;
       }
 
-      // Upload to Firebase Storage
+      // Create unique filename and storage path
       const fileName = `profile_${Date.now()}.${file.type.split('/')[1]}`;
       const storagePath = `users/${currentUser.uid}/profile/${fileName}`;
       console.log("📤 Uploading to storage path:", storagePath);
       
       const storageRef = ref(storage, storagePath);
       
-      // Upload file
+      // Upload file to Firebase Storage
       console.log("⬆️ Starting upload...");
       const snapshot = await uploadBytes(storageRef, file);
       console.log("✅ Upload completed:", snapshot.metadata);
       
+      // Get download URL for the uploaded file
       const downloadURL = await getDownloadURL(snapshot.ref);
       console.log("🔗 Download URL obtained:", downloadURL);
 
-      // Update user document in Firestore
+      // Update or create user document in Firestore
       console.log("💾 Updating Firestore document...");
       const userDocRef = doc(db, "users", currentUser.uid);
       
-      // Check if document exists first
+      // Check if user document already exists
       const userDoc = await getDoc(userDocRef);
       if (!userDoc.exists()) {
+        // Create new user document with profile image
         console.log("📝 User document doesn't exist, creating new one...");
-        // Create new user document
         await setDoc(userDocRef, {
           uid: currentUser.uid,
           email: currentUser.email || "",
-          username: username, // Use the username from URL params
+          username: username,
           profileImageUrl: downloadURL,
           profileImagePath: storagePath,
           createdAt: new Date(),
@@ -161,7 +196,7 @@ export default function HomePage() {
         });
         console.log("✅ New user document created with profile image");
       } else {
-        // Document exists, update it
+        // Update existing user document
         await updateDoc(userDocRef, {
           profileImageUrl: downloadURL,
           profileImagePath: storagePath,
@@ -170,12 +205,13 @@ export default function HomePage() {
         console.log("✅ Existing user document updated");
       }
 
-      // Update local state
+      // Update local state to reflect new profile image
       setProfileImage(downloadURL);
       
       alert("✅ Profile picture updated successfully!");
       
     } catch (error: any) {
+      // Comprehensive error handling with specific error messages
       console.error("❌ Full error details:", {
         message: error.message,
         code: error.code,
@@ -185,6 +221,7 @@ export default function HomePage() {
       
       let errorMessage = "Failed to upload profile picture. ";
       
+      // Handle specific Firebase error codes
       if (error.code === 'storage/unauthorized') {
         errorMessage += "Permission denied. Check your Firestore security rules.";
       } else if (error.code === 'storage/canceled') {
@@ -199,19 +236,22 @@ export default function HomePage() {
       
       alert("❌ " + errorMessage);
     } finally {
+      // Reset upload state regardless of success or failure
       setUploadingImage(false);
     }
   };
 
   return (
     <div style={{ backgroundColor: "#e8f5e9", minHeight: "100vh", fontFamily: "Arial, sans-serif" }}>
-      {/* Top Navigation Bar */}
+      {/* Top Navigation Bar - Contains app title and user navigation */}
       <div className="navbar">
         <div style={{ fontSize: "1.5em", fontWeight: "bold" }}>Recipe Logger</div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5em" }}>
+          {/* Navigation links */}
           <a href={`/home/${username}`}>Home</a> |
           <a href={`/explore/${username}`}>Explore</a> |
           <a href={username ? `/shoppingList/${username}` : "/shoppingList"}>Cart</a> |
+          {/* User profile image in navbar */}
           <img
             src={profileImage}
             alt="User Profile"
@@ -228,11 +268,13 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Contains sidebar and recipe list */}
       <div className="home-container">
-        {/* Sidebar Menu */}
+        {/* Sidebar Menu - Profile section and navigation */}
         <div className="filters-column">
+          {/* Profile Image Upload Section */}
           <div style={{ display: "flex", alignItems: "center", marginBottom: "1em" }}>
+            {/* Clickable profile image that triggers file upload */}
             <label htmlFor="profile-upload" style={{ cursor: "pointer", position: "relative" }}>
               <img
                 src={profileImage}
@@ -243,9 +285,10 @@ export default function HomePage() {
                   borderRadius: "50%",
                   objectFit: "cover",
                   border: "2px solid #ddd",
-                  opacity: uploadingImage ? 0.6 : 1
+                  opacity: uploadingImage ? 0.6 : 1 // Dim image during upload
                 }}
               />
+              {/* Upload progress indicator */}
               {uploadingImage && (
                 <div style={{
                   position: "absolute",
@@ -259,6 +302,7 @@ export default function HomePage() {
                 </div>
               )}
             </label>
+            {/* Hidden file input for image upload */}
             <input 
               id="profile-upload" 
               type="file" 
@@ -270,6 +314,7 @@ export default function HomePage() {
             <span style={{ marginLeft: "1em", fontSize: "1.2em" }}>{username}</span>
           </div>
 
+          {/* Tab Navigation - Switch between saved and created recipes */}
           <div className="menu-section">
             <div
               onClick={() => setActiveTab("saved")}
@@ -287,9 +332,11 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Post Recipe Link - Only available to profile owner */}
           <div className="menu-section">
             <a
               onClick={async (e) => {
+                // Check if user owns this profile before allowing recipe upload
                 const isOwner = await isOwnPage(username);
                 if (!isOwner) {
                   e.preventDefault();
@@ -308,24 +355,27 @@ export default function HomePage() {
                 cursor: "pointer",
                 transition: "background-color 0.3s",
               }}
+              // Hover effects for better UX
               onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#d6ead6")}
               onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             >
               Post Recipe
             </a>
-
           </div>
         </div>
 
-        {/* Recipe List */}
+        {/* Recipe List - Main content area displaying recipes */}
         <div className="main-content">
           <h2>{activeTab === "saved" ? "Saved Recipes" : "My Recipes"}</h2>
+          
+          {/* Conditional rendering based on loading state and recipe availability */}
           {loading ? (
             <p>Loading recipes...</p>
           ) : currentRecipes.length === 0 ? (
             <p>No recipes to display.</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              {/* Map through recipes and create clickable cards */}
               {currentRecipes.map((recipe) => (
                 <Link
                   key={recipe.recipeId}
